@@ -1,0 +1,2 @@
+url : https://uzqhbxijpqyyukuogsfg.supabase.co
+pkey : sb_publishable_Hl_LxJjiff8AIFKbdcdg1A_FP5QFv8j

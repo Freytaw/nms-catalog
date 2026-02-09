@@ -75,6 +75,9 @@ export function SectorDetail() {
         )}
         <h1>{sector.name}</h1>
         <div className="card-content">
+          {sector.galaxy && (
+            <p><strong>Galaxie :</strong> {sector.galaxy}</p>
+          )}
           {sector.coordinates && (
             <p><strong>Coordonnées :</strong> {sector.coordinates}</p>
           )}

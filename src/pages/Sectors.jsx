@@ -11,6 +11,7 @@ function Sectors() {
   const [editingSector, setEditingSector] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
+    galaxy: 'Euclide',
     coordinates: '',
     discovery_date: new Date().toISOString().split('T')[0],
     notes: '',
@@ -59,6 +60,7 @@ function Sectors() {
 
       setFormData({
         name: '',
+        galaxy: 'Euclide',
         coordinates: '',
         discovery_date: new Date().toISOString().split('T')[0],
         notes: '',
@@ -95,6 +97,7 @@ function Sectors() {
     setEditingSector(sector)
     setFormData({
       name: sector.name,
+      galaxy: sector.galaxy || 'Euclide',
       coordinates: sector.coordinates || '',
       discovery_date: sector.discovery_date,
       notes: sector.notes || '',
@@ -109,6 +112,7 @@ function Sectors() {
     setEditingSector(null)
     setFormData({
       name: '',
+      galaxy: 'Euclide',
       coordinates: '',
       discovery_date: new Date().toISOString().split('T')[0],
       notes: '',
@@ -148,6 +152,18 @@ function Sectors() {
                 className="form-input"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Galaxie *</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: Euclide, Hilbert, Calypso..."
+                value={formData.galaxy}
+                onChange={(e) => setFormData({ ...formData, galaxy: e.target.value })}
                 required
               />
             </div>
@@ -214,57 +230,91 @@ function Sectors() {
           <p>Commence par créer ton premier secteur !</p>
         </div>
       ) : (
-        <div className="grid grid-2">
-          {sectors.map((sector) => (
-            <div key={sector.id} className="card">
-              {sector.image_url && (
-                <img 
-                  src={sector.image_url} 
-                  alt={sector.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    objectFit: 'cover', 
-                    borderRadius: 'var(--radius-md)',
-                    marginBottom: '1rem'
-                  }}
-                />
-              )}
-              <div className="card-header">
-                <Link to={`/sectors/${sector.id}`} className="card-title">
-                  {sector.name}
-                </Link>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleEdit(sector)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => handleDelete(sector.id)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <div className="card-content">
-                {sector.coordinates && (
-                  <p><strong>Coordonnées :</strong> {sector.coordinates}</p>
-                )}
-                {sector.discovery_date && (
-                  <p><strong>Découvert le :</strong> {new Date(sector.discovery_date).toLocaleDateString('fr-FR')}</p>
-                )}
-                {sector.notes && (
-                  <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{sector.notes}</p>
-                )}
+        <>
+          {/* Group sectors by galaxy */}
+          {Object.entries(
+            sectors.reduce((acc, sector) => {
+              const galaxy = sector.galaxy || 'Euclide'
+              if (!acc[galaxy]) acc[galaxy] = []
+              acc[galaxy].push(sector)
+              return acc
+            }, {})
+          ).map(([galaxy, galaxySectors]) => (
+            <div key={galaxy} style={{ marginBottom: '3rem' }}>
+              <h2 style={{ 
+                marginBottom: '1.5rem',
+                color: 'var(--nms-primary)',
+                fontSize: '1.75rem',
+                borderBottom: '2px solid var(--nms-border)',
+                paddingBottom: '0.5rem'
+              }}>
+                {galaxy} ({galaxySectors.length})
+              </h2>
+              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+                {galaxySectors.map((sector) => {
+                  const images = sector.images || []
+                  const mainImage = images[0] || sector.image_url
+                  
+                  return (
+                    <div key={sector.id} className="card">
+                      {mainImage && (
+                        <img 
+                          src={mainImage} 
+                          alt={sector.name}
+                          style={{ 
+                            width: '100%', 
+                            height: '200px', 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '1rem'
+                          }}
+                        />
+                      )}
+                      <div className="card-header">
+                        <Link to={`/sectors/${sector.id}`} className="card-title">
+                          {sector.name}
+                        </Link>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            onClick={() => handleEdit(sector)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            onClick={() => handleDelete(sector.id)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="card-content">
+                        {sector.coordinates && (
+                          <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
+                            <strong>Coordonnées :</strong> {sector.coordinates}
+                          </p>
+                        )}
+                        {sector.discovery_date && (
+                          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                            <strong>Découvert le :</strong> {new Date(sector.discovery_date).toLocaleDateString('fr-FR')}
+                          </p>
+                        )}
+                        {sector.notes && (
+                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)', fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
+                            {sector.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}
-        </div>
+        </>
       )}
     </div>
   )

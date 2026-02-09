@@ -5,6 +5,7 @@
 CREATE TABLE sectors (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
+  galaxy TEXT NOT NULL DEFAULT 'Euclide',
   coordinates TEXT,
   discovery_date DATE NOT NULL DEFAULT CURRENT_DATE,
   notes TEXT,

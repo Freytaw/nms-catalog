@@ -78,9 +78,6 @@ export function SectorDetail() {
           {sector.galaxy && (
             <p><strong>Galaxie :</strong> {sector.galaxy}</p>
           )}
-          {sector.coordinates && (
-            <p><strong>Coordonnées :</strong> {sector.coordinates}</p>
-          )}
           {sector.discovery_date && (
             <p><strong>Découvert le :</strong> {new Date(sector.discovery_date).toLocaleDateString('fr-FR')}</p>
           )}
@@ -268,6 +265,11 @@ export function SystemDetail() {
           )}
           {system.star_class && (
             <p><strong>Classe d'étoile :</strong> {system.star_class}</p>
+          )}
+          {system.coordinates && (
+            <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
+              <strong>Coordonnées :</strong> {system.coordinates}
+            </p>
           )}
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
             {system.planet_count > 0 && (

@@ -12,7 +12,6 @@ function Sectors() {
   const [formData, setFormData] = useState({
     name: '',
     galaxy: 'Euclide',
-    coordinates: '',
     discovery_date: new Date().toISOString().split('T')[0],
     notes: '',
     image_url: '',
@@ -61,7 +60,6 @@ function Sectors() {
       setFormData({
         name: '',
         galaxy: 'Euclide',
-        coordinates: '',
         discovery_date: new Date().toISOString().split('T')[0],
         notes: '',
         image_url: '',
@@ -98,7 +96,6 @@ function Sectors() {
     setFormData({
       name: sector.name,
       galaxy: sector.galaxy || 'Euclide',
-      coordinates: sector.coordinates || '',
       discovery_date: sector.discovery_date,
       notes: sector.notes || '',
       image_url: sector.image_url || '',
@@ -113,7 +110,6 @@ function Sectors() {
     setFormData({
       name: '',
       galaxy: 'Euclide',
-      coordinates: '',
       discovery_date: new Date().toISOString().split('T')[0],
       notes: '',
       image_url: '',
@@ -165,17 +161,6 @@ function Sectors() {
                 value={formData.galaxy}
                 onChange={(e) => setFormData({ ...formData, galaxy: e.target.value })}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Coordonnées</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Ex: HUKYA:046A:0081:0D6D:0038"
-                value={formData.coordinates}
-                onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
               />
             </div>
 
@@ -292,13 +277,8 @@ function Sectors() {
                         </div>
                       </div>
                       <div className="card-content">
-                        {sector.coordinates && (
-                          <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
-                            <strong>Coordonnées :</strong> {sector.coordinates}
-                          </p>
-                        )}
                         {sector.discovery_date && (
-                          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                          <p style={{ fontSize: '0.875rem' }}>
                             <strong>Découvert le :</strong> {new Date(sector.discovery_date).toLocaleDateString('fr-FR')}
                           </p>
                         )}

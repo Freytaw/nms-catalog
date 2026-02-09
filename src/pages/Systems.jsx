@@ -13,6 +13,7 @@ function Systems() {
   const [formData, setFormData] = useState({
     sector_id: '',
     name: '',
+    coordinates: '',
     star_class: '',
     conflict_level: '',
     economy: '',
@@ -75,10 +76,19 @@ function Systems() {
       setFormData({
         sector_id: '',
         name: '',
+        coordinates: '',
         star_class: '',
+        conflict_level: '',
+        economy: '',
+        planet_count: 0,
+        system_type: '',
+        dominant_race: '',
+        interesting_buy: '',
+        interesting_sell: '',
         discovery_date: new Date().toISOString().split('T')[0],
         notes: '',
-        image_url: ''
+        image_url: '',
+        images: []
       })
       setEditingSystem(null)
       setShowForm(false)
@@ -111,6 +121,7 @@ function Systems() {
     setFormData({
       sector_id: system.sector_id,
       name: system.name,
+      coordinates: system.coordinates || '',
       star_class: system.star_class || '',
       conflict_level: system.conflict_level || '',
       economy: system.economy || '',
@@ -133,6 +144,7 @@ function Systems() {
     setFormData({
       sector_id: '',
       name: '',
+      coordinates: '',
       star_class: '',
       conflict_level: '',
       economy: '',
@@ -197,6 +209,17 @@ function Systems() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Coordonnées</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: HUKYA:046A:0081:0D6D:0038"
+                value={formData.coordinates}
+                onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
               />
             </div>
 
@@ -390,6 +413,11 @@ function Systems() {
                 )}
                 {system.star_class && (
                   <p><strong>Classe d'étoile :</strong> {system.star_class}</p>
+                )}
+                {system.coordinates && (
+                  <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
+                    <strong>Coordonnées :</strong> {system.coordinates}
+                  </p>
                 )}
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
                   {system.planet_count > 0 && (

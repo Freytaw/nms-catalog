@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Users } from 'lucide-react'
+import ImageUpload from '../components/ImageUpload'
 
 function Creatures() {
   const [creatures, setCreatures] = useState([])
@@ -19,7 +20,8 @@ function Creatures() {
     behavior: '',
     diet: '',
     special_abilities: '',
-    notes: ''
+    notes: '',
+    images: []
   })
 
   useEffect(() => {
@@ -77,7 +79,8 @@ function Creatures() {
         behavior: '',
         diet: '',
         special_abilities: '',
-        notes: ''
+        notes: '',
+        images: []
       })
       setEditingCreature(null)
       setShowForm(false)
@@ -117,7 +120,8 @@ function Creatures() {
       behavior: creature.behavior || '',
       diet: creature.diet || '',
       special_abilities: creature.special_abilities || '',
-      notes: creature.notes || ''
+      notes: creature.notes || '',
+      images: creature.images || []
     })
     setShowForm(true)
   }
@@ -135,7 +139,8 @@ function Creatures() {
       behavior: '',
       diet: '',
       special_abilities: '',
-      notes: ''
+      notes: '',
+      images: []
     })
   }
 
@@ -268,6 +273,17 @@ function Creatures() {
                 onChange={(e) => setFormData({ ...formData, special_abilities: e.target.value })}
               />
             </div>
+
+            <ImageUpload
+              images={formData.images}
+              onChange={(newImages) => {
+                setFormData({ 
+                  ...formData, 
+                  images: newImages
+                })
+              }}
+              label="Images de la créature"
+            />
 
             <div className="form-group">
               <label className="form-label">Notes</label>

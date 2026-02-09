@@ -62,7 +62,8 @@ function Sectors() {
         coordinates: '',
         discovery_date: new Date().toISOString().split('T')[0],
         notes: '',
-        image_url: ''
+        image_url: '',
+        images: []
       })
       setEditingSector(null)
       setShowForm(false)
@@ -97,7 +98,8 @@ function Sectors() {
       coordinates: sector.coordinates || '',
       discovery_date: sector.discovery_date,
       notes: sector.notes || '',
-      image_url: sector.image_url || ''
+      image_url: sector.image_url || '',
+      images: sector.images || []
     })
     setShowForm(true)
   }
@@ -110,7 +112,8 @@ function Sectors() {
       coordinates: '',
       discovery_date: new Date().toISOString().split('T')[0],
       notes: '',
-      image_url: ''
+      image_url: '',
+      images: []
     })
   }
 
@@ -170,16 +173,17 @@ function Sectors() {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">URL de l'image</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="https://..."
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              />
-            </div>
+            <ImageUpload
+              images={formData.images}
+              onChange={(newImages) => {
+                setFormData({ 
+                  ...formData, 
+                  images: newImages,
+                  image_url: newImages[0] || '' 
+                })
+              }}
+              label="Images du secteur"
+            />
 
             <div className="form-group">
               <label className="form-label">Notes</label>

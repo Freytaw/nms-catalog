@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Globe } from 'lucide-react'
+import ImageUpload from '../components/ImageUpload'
 
 function Planets() {
   const [planets, setPlanets] = useState([])
@@ -18,7 +19,8 @@ function Planets() {
     resources: '',
     fauna_count: 0,
     flora_count: 0,
-    notes: ''
+    notes: '',
+    images: []
   })
 
   useEffect(() => {
@@ -75,7 +77,8 @@ function Planets() {
         resources: '',
         fauna_count: 0,
         flora_count: 0,
-        notes: ''
+        notes: '',
+        images: []
       })
       setEditingPlanet(null)
       setShowForm(false)
@@ -114,7 +117,8 @@ function Planets() {
       resources: planet.resources || '',
       fauna_count: planet.fauna_count || 0,
       flora_count: planet.flora_count || 0,
-      notes: planet.notes || ''
+      notes: planet.notes || '',
+      images: planet.images || []
     })
     setShowForm(true)
   }
@@ -131,7 +135,8 @@ function Planets() {
       resources: '',
       fauna_count: 0,
       flora_count: 0,
-      notes: ''
+      notes: '',
+      images: []
     })
   }
 
@@ -255,6 +260,17 @@ function Planets() {
                 onChange={(e) => setFormData({ ...formData, flora_count: parseInt(e.target.value) || 0 })}
               />
             </div>
+
+            <ImageUpload
+              images={formData.images}
+              onChange={(newImages) => {
+                setFormData({ 
+                  ...formData, 
+                  images: newImages
+                })
+              }}
+              label="Images de la planète"
+            />
 
             <div className="form-group">
               <label className="form-label">Notes</label>

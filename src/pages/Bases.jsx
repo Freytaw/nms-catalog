@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Building } from 'lucide-react'
+import ImageUpload from '../components/ImageUpload'
 
 function Bases() {
   const [bases, setBases] = useState([])
@@ -13,7 +14,8 @@ function Bases() {
     name: '',
     location_description: '',
     resources_nearby: '',
-    notes: ''
+    notes: '',
+    images: []
   })
 
   useEffect(() => {
@@ -66,7 +68,8 @@ function Bases() {
         name: '',
         location_description: '',
         resources_nearby: '',
-        notes: ''
+        notes: '',
+        images: []
       })
       setEditingBase(null)
       setShowForm(false)
@@ -101,7 +104,8 @@ function Bases() {
       name: base.name,
       location_description: base.location_description || '',
       resources_nearby: base.resources_nearby || '',
-      notes: base.notes || ''
+      notes: base.notes || '',
+      images: base.images || []
     })
     setShowForm(true)
   }
@@ -114,7 +118,8 @@ function Bases() {
       name: '',
       location_description: '',
       resources_nearby: '',
-      notes: ''
+      notes: '',
+      images: []
     })
   }
 
@@ -192,6 +197,17 @@ function Bases() {
                 onChange={(e) => setFormData({ ...formData, resources_nearby: e.target.value })}
               />
             </div>
+
+            <ImageUpload
+              images={formData.images}
+              onChange={(newImages) => {
+                setFormData({ 
+                  ...formData, 
+                  images: newImages
+                })
+              }}
+              label="Images de la base"
+            />
 
             <div className="form-group">
               <label className="form-label">Notes</label>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { ArrowLeft, Database, Globe, Edit } from 'lucide-react'
+import ImageGallery from '../components/ImageGallery'
 
 export function SectorDetail() {
   const { id } = useParams()
@@ -70,19 +71,10 @@ export function SectorDetail() {
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        {sector.image_url && (
-          <img 
-            src={sector.image_url} 
-            alt={sector.name}
-            style={{ 
-              width: '100%', 
-              height: '300px', 
-              objectFit: 'cover', 
-              borderRadius: 'var(--radius-md)',
-              marginBottom: '1rem'
-            }}
-          />
-        )}
+        <ImageGallery 
+          images={(sector.images && sector.images.length > 0) ? sector.images : (sector.image_url ? [sector.image_url] : [])}
+          title={sector.name}
+        />
         <h1>{sector.name}</h1>
         <div className="card-content">
           {sector.galaxy && (
@@ -235,7 +227,6 @@ export function SystemDetail() {
 
   // Parse images from JSONB if available
   const images = system.images || []
-  const mainImage = images[0] || system.image_url
 
   return (
     <div className="container">
@@ -254,29 +245,10 @@ export function SystemDetail() {
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        {mainImage && (
-          <img 
-            src={mainImage} 
-            alt={system.name}
-            style={{ 
-              width: '100%', 
-              height: '300px', 
-              objectFit: 'cover', 
-              borderRadius: 'var(--radius-md)',
-              marginBottom: '1rem'
-            }}
-          />
-        )}
-        
-        {images.length > 1 && (
-          <div className="image-grid" style={{ marginBottom: '1rem' }}>
-            {images.slice(1).map((img, idx) => (
-              <div key={idx} className="image-preview">
-                <img src={img} alt={`${system.name} ${idx + 2}`} />
-              </div>
-            ))}
-          </div>
-        )}
+        <ImageGallery 
+          images={images.length > 0 ? images : (system.image_url ? [system.image_url] : [])}
+          title={system.name}
+        />
 
         <h1>{system.name}</h1>
         <div className="card-content">
@@ -421,7 +393,6 @@ export function PlanetDetail() {
   }
 
   const images = planet.images || []
-  const mainImage = images[0]
 
   return (
     <div className="container">
@@ -440,29 +411,10 @@ export function PlanetDetail() {
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        {mainImage && (
-          <img 
-            src={mainImage} 
-            alt={planet.name}
-            style={{ 
-              width: '100%', 
-              height: '300px', 
-              objectFit: 'cover', 
-              borderRadius: 'var(--radius-md)',
-              marginBottom: '1rem'
-            }}
-          />
-        )}
-        
-        {images.length > 1 && (
-          <div className="image-grid" style={{ marginBottom: '1rem' }}>
-            {images.slice(1).map((img, idx) => (
-              <div key={idx} className="image-preview">
-                <img src={img} alt={`${planet.name} ${idx + 2}`} />
-              </div>
-            ))}
-          </div>
-        )}
+        <ImageGallery 
+          images={images}
+          title={planet.name}
+        />
 
         <h1>{planet.name}</h1>
         <div className="card-content">
@@ -610,7 +562,6 @@ export function CreatureDetail() {
   }
 
   const images = creature.images || []
-  const mainImage = images[0]
 
   return (
     <div className="container">
@@ -629,29 +580,10 @@ export function CreatureDetail() {
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        {mainImage && (
-          <img 
-            src={mainImage} 
-            alt={creature.name}
-            style={{ 
-              width: '100%', 
-              height: '300px', 
-              objectFit: 'cover', 
-              borderRadius: 'var(--radius-md)',
-              marginBottom: '1rem'
-            }}
-          />
-        )}
-        
-        {images.length > 1 && (
-          <div className="image-grid" style={{ marginBottom: '1rem' }}>
-            {images.slice(1).map((img, idx) => (
-              <div key={idx} className="image-preview">
-                <img src={img} alt={`${creature.name} ${idx + 2}`} />
-              </div>
-            ))}
-          </div>
-        )}
+        <ImageGallery 
+          images={images}
+          title={creature.name}
+        />
 
         <h1>{creature.name}</h1>
         <div className="card-content">

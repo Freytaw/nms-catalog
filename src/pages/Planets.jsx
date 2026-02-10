@@ -312,8 +312,25 @@ function Planets() {
         </div>
       ) : (
         <div className="grid grid-3">
-          {planets.map((planet) => (
+          {planets.map((planet) => {
+            const images = planet.images || []
+            const mainImage = images[0]
+            
+            return (
             <div key={planet.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={planet.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '200px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
               <div className="card-header">
                 <Link to={`/planets/${planet.id}`} className="card-title">
                   {planet.name}
@@ -354,7 +371,8 @@ function Planets() {
                 )}
               </div>
             </div>
-          ))}
+          )
+          })}
         </div>
       )}
     </div>

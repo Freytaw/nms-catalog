@@ -325,8 +325,25 @@ function Creatures() {
         </div>
       ) : (
         <div className="grid grid-3">
-          {creatures.map((creature) => (
+          {creatures.map((creature) => {
+            const images = creature.images || []
+            const mainImage = images[0]
+            
+            return (
             <div key={creature.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={creature.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '200px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
               <div className="card-header">
                 <Link to={`/creatures/${creature.id}`} className="card-title">
                   {creature.name}
@@ -371,7 +388,8 @@ function Creatures() {
                 )}
               </div>
             </div>
-          ))}
+          )
+          })}
         </div>
       )}
     </div>

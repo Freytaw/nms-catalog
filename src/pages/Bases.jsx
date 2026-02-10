@@ -250,8 +250,25 @@ function Bases() {
         </div>
       ) : (
         <div className="grid grid-2">
-          {bases.map((base) => (
+          {bases.map((base) => {
+            const images = base.images || []
+            const mainImage = images[0]
+            
+            return (
             <div key={base.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={base.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '200px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
               <div className="card-header">
                 <h3 className="card-title">{base.name}</h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -286,7 +303,8 @@ function Bases() {
                 )}
               </div>
             </div>
-          ))}
+          )
+          })}
         </div>
       )}
     </div>

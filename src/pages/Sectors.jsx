@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Map } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 
 function Sectors() {
+  const location = useLocation()
   const [sectors, setSectors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -21,6 +22,15 @@ function Sectors() {
   useEffect(() => {
     fetchSectors()
   }, [])
+
+  // Detect navigation from detail page
+  useEffect(() => {
+    if (location.state?.editItem) {
+      handleEdit(location.state.editItem)
+      // Clear the state
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   async function fetchSectors() {
     try {

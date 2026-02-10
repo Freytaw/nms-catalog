@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Building } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 
 function Bases() {
+  const location = useLocation()
   const [bases, setBases] = useState([])
   const [planets, setPlanets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,6 +23,15 @@ function Bases() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  // Detect navigation from detail page
+  useEffect(() => {
+    if (location.state?.editItem) {
+      handleEdit(location.state.editItem)
+      // Clear the state
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   async function fetchData() {
     try {

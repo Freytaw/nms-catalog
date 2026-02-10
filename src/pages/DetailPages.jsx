@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Database, Globe } from 'lucide-react'
+import { ArrowLeft, Database, Globe, Edit } from 'lucide-react'
 
 export function SectorDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [sector, setSector] = useState(null)
   const [systems, setSystems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -54,10 +55,19 @@ export function SectorDetail() {
 
   return (
     <div className="container">
-      <Link to="/sectors" className="btn btn-secondary" style={{ marginBottom: '2rem' }}>
-        <ArrowLeft size={20} />
-        Retour aux secteurs
-      </Link>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link to="/sectors" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux secteurs
+        </Link>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/sectors', { state: { editItem: sector } })}
+        >
+          <Edit size={20} />
+          Modifier
+        </button>
+      </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
         {sector.image_url && (
@@ -172,6 +182,7 @@ export function SectorDetail() {
 
 export function SystemDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [system, setSystem] = useState(null)
   const [planets, setPlanets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -228,10 +239,19 @@ export function SystemDetail() {
 
   return (
     <div className="container">
-      <Link to="/systems" className="btn btn-secondary" style={{ marginBottom: '2rem' }}>
-        <ArrowLeft size={20} />
-        Retour aux systèmes
-      </Link>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link to="/systems" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux systèmes
+        </Link>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/systems', { state: { editItem: system } })}
+        >
+          <Edit size={20} />
+          Modifier
+        </button>
+      </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
         {mainImage && (
@@ -345,6 +365,7 @@ export function SystemDetail() {
 
 export function PlanetDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [planet, setPlanet] = useState(null)
   const [creatures, setCreatures] = useState([])
   const [bases, setBases] = useState([])
@@ -404,10 +425,19 @@ export function PlanetDetail() {
 
   return (
     <div className="container">
-      <Link to="/planets" className="btn btn-secondary" style={{ marginBottom: '2rem' }}>
-        <ArrowLeft size={20} />
-        Retour aux planètes
-      </Link>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link to="/planets" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux planètes
+        </Link>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/planets', { state: { editItem: planet } })}
+        >
+          <Edit size={20} />
+          Modifier
+        </button>
+      </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
         {mainImage && (
@@ -531,14 +561,145 @@ export function PlanetDetail() {
 
 export function CreatureDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const [creature, setCreature] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchCreature()
+  }, [id])
+
+  async function fetchCreature() {
+    try {
+      const { data, error } = await supabase
+        .from('creatures')
+        .select(`
+          *,
+          planets (name, systems(name, sectors(name)))
+        `)
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+      setCreature(data)
+    } catch (error) {
+      console.error('Error fetching creature:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="loading">Chargement...</div>
+      </div>
+    )
+  }
+
+  if (!creature) {
+    return (
+      <div className="container">
+        <p>Créature non trouvée</p>
+        <Link to="/creatures" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux créatures
+        </Link>
+      </div>
+    )
+  }
+
+  const images = creature.images || []
+  const mainImage = images[0]
+
   return (
     <div className="container">
-      <Link to="/creatures" className="btn btn-secondary" style={{ marginBottom: '2rem' }}>
-        <ArrowLeft size={20} />
-        Retour aux créatures
-      </Link>
-      <h1>Détails de la Créature #{id}</h1>
-      <p>Page en construction - Affichera galerie photos et informations complètes</p>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link to="/creatures" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux créatures
+        </Link>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/creatures', { state: { editItem: creature } })}
+        >
+          <Edit size={20} />
+          Modifier
+        </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        {mainImage && (
+          <img 
+            src={mainImage} 
+            alt={creature.name}
+            style={{ 
+              width: '100%', 
+              height: '300px', 
+              objectFit: 'cover', 
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '1rem'
+            }}
+          />
+        )}
+        
+        {images.length > 1 && (
+          <div className="image-grid" style={{ marginBottom: '1rem' }}>
+            {images.slice(1).map((img, idx) => (
+              <div key={idx} className="image-preview">
+                <img src={img} alt={`${creature.name} ${idx + 2}`} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <h1>{creature.name}</h1>
+        <div className="card-content">
+          {creature.planets && (
+            <>
+              <p>
+                <strong>Planète :</strong> {creature.planets.name}
+                {creature.planets.systems && (
+                  <> / <strong>Système :</strong> {creature.planets.systems.name}</>
+                )}
+                {creature.planets.systems?.sectors && (
+                  <> / <strong>Secteur :</strong> {creature.planets.systems.sectors.name}</>
+                )}
+              </p>
+            </>
+          )}
+          {creature.original_name && (
+            <p><strong>Nom d'origine :</strong> {creature.original_name}</p>
+          )}
+          {creature.genus && (
+            <p><strong>Genre :</strong> {creature.genus}</p>
+          )}
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+            {creature.height && (
+              <span style={{ whiteSpace: 'nowrap' }}><strong>Taille :</strong> {creature.height}</span>
+            )}
+            {creature.weight && (
+              <span style={{ whiteSpace: 'nowrap' }}><strong>Poids :</strong> {creature.weight}</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+            {creature.behavior && (
+              <span style={{ whiteSpace: 'nowrap' }}><strong>Comportement :</strong> {creature.behavior}</span>
+            )}
+            {creature.diet && (
+              <span style={{ whiteSpace: 'nowrap' }}><strong>Régime :</strong> {creature.diet}</span>
+            )}
+          </div>
+          {creature.special_abilities && (
+            <p style={{ marginTop: '0.5rem' }}>
+              <strong>Capacités spéciales :</strong> {creature.special_abilities}
+            </p>
+          )}
+          {creature.notes && (
+            <p style={{ marginTop: '1rem', color: 'var(--nms-gray)' }}>{creature.notes}</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

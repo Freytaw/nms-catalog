@@ -635,3 +635,107 @@ export function CreatureDetail() {
     </div>
   )
 }
+
+export function BaseDetail() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [base, setBase] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchBase()
+  }, [id])
+
+  async function fetchBase() {
+    try {
+      const { data, error } = await supabase
+        .from('bases')
+        .select(`
+          *,
+          planets (name, systems(name, sectors(name)))
+        `)
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+      setBase(data)
+    } catch (error) {
+      console.error('Error fetching base:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="loading">Chargement...</div>
+      </div>
+    )
+  }
+
+  if (!base) {
+    return (
+      <div className="container">
+        <p>Base non trouvée</p>
+        <Link to="/bases" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux bases
+        </Link>
+      </div>
+    )
+  }
+
+  const images = base.images || []
+
+  return (
+    <div className="container">
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link to="/bases" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux bases
+        </Link>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/bases', { state: { editItem: base } })}
+        >
+          <Edit size={20} />
+          Modifier
+        </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        <ImageGallery 
+          images={images}
+          title={base.name}
+        />
+
+        <h1>{base.name}</h1>
+        <div className="card-content">
+          {base.planets && (
+            <>
+              <p>
+                <strong>Planète :</strong> {base.planets.name}
+                {base.planets.systems && (
+                  <> / <strong>Système :</strong> {base.planets.systems.name}</>
+                )}
+                {base.planets.systems?.sectors && (
+                  <> / <strong>Secteur :</strong> {base.planets.systems.sectors.name}</>
+                )}
+              </p>
+            </>
+          )}
+          {base.location_description && (
+            <p><strong>Localisation :</strong> {base.location_description}</p>
+          )}
+          {base.resources_nearby && (
+            <p><strong>Ressources à proximité :</strong> {base.resources_nearby}</p>
+          )}
+          {base.notes && (
+            <p style={{ marginTop: '1rem', color: 'var(--nms-gray)' }}>{base.notes}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

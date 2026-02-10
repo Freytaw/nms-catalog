@@ -6,7 +6,7 @@ import Systems from './pages/Systems'
 import Planets from './pages/Planets'
 import Creatures from './pages/Creatures'
 import Bases from './pages/Bases'
-import { SectorDetail, SystemDetail, PlanetDetail, CreatureDetail } from './pages/DetailPages'
+import { SectorDetail, SystemDetail, PlanetDetail, CreatureDetail, BaseDetail } from './pages/DetailPages'
 import './index.css'
 
 function App() {
@@ -70,6 +70,7 @@ function App() {
             <Route path="/creatures" element={<Creatures />} />
             <Route path="/creatures/:id" element={<CreatureDetail />} />
             <Route path="/bases" element={<Bases />} />
+            <Route path="/bases/:id" element={<BaseDetail />} />
           </Routes>
         </main>
       </div>

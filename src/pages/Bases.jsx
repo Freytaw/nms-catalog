@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Building } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
@@ -270,7 +270,9 @@ function Bases() {
                 />
               )}
               <div className="card-header">
-                <h3 className="card-title">{base.name}</h3>
+                <Link to={`/bases/${base.id}`} className="card-title">
+                  {base.name}
+                </Link>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button 
                     className="btn btn-secondary" 

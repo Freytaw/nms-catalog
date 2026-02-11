@@ -18,8 +18,10 @@ function Planets() {
     climate: '',
     sentinels: '',
     resources: '',
-    fauna_count: 0,
-    flora_count: 0,
+    fauna_discovered: 0,
+    fauna_total: 0,
+    flora_discovered: 0,
+    minerals_discovered: 0,
     notes: '',
     images: []
   })
@@ -125,8 +127,10 @@ function Planets() {
       climate: planet.climate || '',
       sentinels: planet.sentinels || '',
       resources: planet.resources || '',
-      fauna_count: planet.fauna_count || 0,
-      flora_count: planet.flora_count || 0,
+      fauna_discovered: planet.fauna_discovered || 0,
+      fauna_total: planet.fauna_total || 0,
+      flora_discovered: planet.flora_discovered || 0,
+      minerals_discovered: planet.minerals_discovered || 0,
       notes: planet.notes || '',
       images: planet.images || []
     })
@@ -143,8 +147,10 @@ function Planets() {
       climate: '',
       sentinels: '',
       resources: '',
-      fauna_count: 0,
-      flora_count: 0,
+      fauna_discovered: 0,
+      fauna_total: 0,
+      flora_discovered: 0,
+      minerals_discovered: 0,
       notes: '',
       images: []
     })
@@ -252,22 +258,46 @@ function Planets() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Nombre d'espèces (Faune)</label>
+              <label className="form-label">Faune découverte</label>
               <input
                 type="number"
                 className="form-input"
-                value={formData.fauna_count}
-                onChange={(e) => setFormData({ ...formData, fauna_count: parseInt(e.target.value) || 0 })}
+                placeholder="Ex: 5"
+                value={formData.fauna_discovered}
+                onChange={(e) => setFormData({ ...formData, fauna_discovered: parseInt(e.target.value) || 0 })}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Nombre d'espèces (Flore)</label>
+              <label className="form-label">Faune totale</label>
               <input
                 type="number"
                 className="form-input"
-                value={formData.flora_count}
-                onChange={(e) => setFormData({ ...formData, flora_count: parseInt(e.target.value) || 0 })}
+                placeholder="Ex: 8"
+                value={formData.fauna_total}
+                onChange={(e) => setFormData({ ...formData, fauna_total: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Flore découverte</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="Ex: 10"
+                value={formData.flora_discovered}
+                onChange={(e) => setFormData({ ...formData, flora_discovered: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Minéraux découverts</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="Ex: 3"
+                value={formData.minerals_discovered}
+                onChange={(e) => setFormData({ ...formData, minerals_discovered: parseInt(e.target.value) || 0 })}
               />
             </div>
 
@@ -365,7 +395,15 @@ function Planets() {
                 {planet.sentinels && (
                   <p><strong>Sentinelles :</strong> {planet.sentinels}</p>
                 )}
-                <p><strong>Faune :</strong> {planet.fauna_count} espèce(s)</p>
+                {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
+                  <p><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</p>
+                )}
+                {planet.flora_discovered > 0 && (
+                  <p><strong>Flore :</strong> {planet.flora_discovered} espèce(s)</p>
+                )}
+                {planet.minerals_discovered > 0 && (
+                  <p><strong>Minéraux :</strong> {planet.minerals_discovered}</p>
+                )}
                 {planet.notes && (
                   <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{planet.notes}</p>
                 )}

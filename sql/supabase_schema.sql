@@ -43,8 +43,10 @@ CREATE TABLE planets (
   climate TEXT,
   sentinels TEXT,
   resources TEXT,
-  fauna_count INTEGER DEFAULT 0,
-  flora_count INTEGER DEFAULT 0,
+  fauna_discovered INTEGER DEFAULT 0,
+  fauna_total INTEGER DEFAULT 0,
+  flora_discovered INTEGER DEFAULT 0,
+  minerals_discovered INTEGER DEFAULT 0,
   notes TEXT,
   images JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL

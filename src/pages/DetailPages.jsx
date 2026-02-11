@@ -359,7 +359,9 @@ export function SystemDetail() {
                 {planet.climate && (
                   <p><strong>Climat :</strong> {planet.climate}</p>
                 )}
-                <p><strong>Faune :</strong> {planet.fauna_count} espèce(s)</p>
+                {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
+                  <p><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</p>
+                )}
               </div>
             </div>
           ))}
@@ -497,9 +499,16 @@ export function PlanetDetail() {
           {planet.resources && (
             <p><strong>Ressources :</strong> {planet.resources}</p>
           )}
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-            <span><strong>Faune :</strong> {planet.fauna_count} espèce(s)</span>
-            <span><strong>Flore :</strong> {planet.flora_count} espèce(s)</span>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+            {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
+              <span><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</span>
+            )}
+            {planet.flora_discovered > 0 && (
+              <span><strong>Flore :</strong> {planet.flora_discovered} espèce(s)</span>
+            )}
+            {planet.minerals_discovered > 0 && (
+              <span><strong>Minéraux :</strong> {planet.minerals_discovered}</span>
+            )}
           </div>
           {planet.notes && (
             <p style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}>{planet.notes}</p>

@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
-function ImageGallery({ images, title }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
-
+function ImageGallery({ images, title, isOpen, setIsOpen, currentIndex, setCurrentIndex }) {
   if (!images || images.length === 0) return null
 
   const openLightbox = (index) => {
@@ -32,39 +29,24 @@ function ImageGallery({ images, title }) {
 
   return (
     <>
-      {/* Main Image */}
+      {/* Main Image - Full display */}
       <img 
         src={images[0]} 
         alt={title}
         onClick={() => openLightbox(0)}
         style={{ 
           width: '100%', 
-          height: '300px', 
-          objectFit: 'cover', 
+          maxHeight: '400px', 
+          objectFit: 'contain', 
           borderRadius: 'var(--radius-md)',
           marginBottom: '1rem',
           cursor: 'pointer',
-          transition: 'transform 0.2s'
+          backgroundColor: 'var(--nms-dark)',
+          transition: 'opacity 0.2s'
         }}
-        onMouseEnter={(e) => e.target.style.transform = 'scale(1.02)'}
-        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+        onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+        onMouseLeave={(e) => e.target.style.opacity = '1'}
       />
-
-      {/* Additional Images Grid */}
-      {images.length > 1 && (
-        <div className="image-grid" style={{ marginBottom: '1rem' }}>
-          {images.slice(1).map((img, idx) => (
-            <div 
-              key={idx} 
-              className="image-preview"
-              onClick={() => openLightbox(idx + 1)}
-              style={{ cursor: 'pointer' }}
-            >
-              <img src={img} alt={`${title} ${idx + 2}`} />
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Lightbox Modal */}
       {isOpen && (

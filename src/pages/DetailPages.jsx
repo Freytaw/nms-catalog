@@ -10,6 +10,8 @@ export function SectorDetail() {
   const [sector, setSector] = useState(null)
   const [systems, setSystems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   useEffect(() => {
     fetchSectorAndSystems()
@@ -74,6 +76,10 @@ export function SectorDetail() {
         <ImageGallery 
           images={(sector.images && sector.images.length > 0) ? sector.images : (sector.image_url ? [sector.image_url] : [])}
           title={sector.name}
+          isOpen={lightboxOpen}
+          setIsOpen={setLightboxOpen}
+          currentIndex={lightboxIndex}
+          setCurrentIndex={setLightboxIndex}
         />
         <h1>{sector.name}</h1>
         <div className="card-content">
@@ -168,6 +174,28 @@ export function SectorDetail() {
           })}
         </div>
       )}
+
+      {/* Image Gallery */}
+      {((sector.images && sector.images.length > 0) || sector.image_url) && (
+        <>
+          <h2 style={{ marginTop: '2rem' }}>Galerie d'images</h2>
+          <div className="image-grid">
+            {((sector.images && sector.images.length > 0) ? sector.images : (sector.image_url ? [sector.image_url] : [])).map((img, idx) => (
+              <div 
+                key={idx} 
+                className="image-preview"
+                onClick={() => {
+                  setLightboxIndex(idx)
+                  setLightboxOpen(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <img src={img} alt={`${sector.name} ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -178,6 +206,8 @@ export function SystemDetail() {
   const [system, setSystem] = useState(null)
   const [planets, setPlanets] = useState([])
   const [loading, setLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   useEffect(() => {
     fetchSystemAndPlanets()
@@ -248,6 +278,10 @@ export function SystemDetail() {
         <ImageGallery 
           images={images.length > 0 ? images : (system.image_url ? [system.image_url] : [])}
           title={system.name}
+          isOpen={lightboxOpen}
+          setIsOpen={setLightboxOpen}
+          currentIndex={lightboxIndex}
+          setCurrentIndex={setLightboxIndex}
         />
 
         <h1>{system.name}</h1>
@@ -331,6 +365,28 @@ export function SystemDetail() {
           ))}
         </div>
       )}
+
+      {/* Image Gallery */}
+      {images.length > 0 && (
+        <>
+          <h2 style={{ marginTop: '2rem' }}>Galerie d'images</h2>
+          <div className="image-grid">
+            {images.map((img, idx) => (
+              <div 
+                key={idx} 
+                className="image-preview"
+                onClick={() => {
+                  setLightboxIndex(idx)
+                  setLightboxOpen(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <img src={img} alt={`${system.name} ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -342,6 +398,8 @@ export function PlanetDetail() {
   const [creatures, setCreatures] = useState([])
   const [bases, setBases] = useState([])
   const [loading, setLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   useEffect(() => {
     fetchPlanetData()
@@ -414,6 +472,10 @@ export function PlanetDetail() {
         <ImageGallery 
           images={images}
           title={planet.name}
+          isOpen={lightboxOpen}
+          setIsOpen={setLightboxOpen}
+          currentIndex={lightboxIndex}
+          setCurrentIndex={setLightboxIndex}
         />
 
         <h1>{planet.name}</h1>
@@ -507,6 +569,28 @@ export function PlanetDetail() {
           ))}
         </div>
       )}
+
+      {/* Image Gallery */}
+      {images.length > 0 && (
+        <>
+          <h2 style={{ marginTop: '2rem' }}>Galerie d'images</h2>
+          <div className="image-grid">
+            {images.map((img, idx) => (
+              <div 
+                key={idx} 
+                className="image-preview"
+                onClick={() => {
+                  setLightboxIndex(idx)
+                  setLightboxOpen(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <img src={img} alt={`${planet.name} ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -516,6 +600,8 @@ export function CreatureDetail() {
   const navigate = useNavigate()
   const [creature, setCreature] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   useEffect(() => {
     fetchCreature()
@@ -583,6 +669,10 @@ export function CreatureDetail() {
         <ImageGallery 
           images={images}
           title={creature.name}
+          isOpen={lightboxOpen}
+          setIsOpen={setLightboxOpen}
+          currentIndex={lightboxIndex}
+          setCurrentIndex={setLightboxIndex}
         />
 
         <h1>{creature.name}</h1>
@@ -632,6 +722,28 @@ export function CreatureDetail() {
           )}
         </div>
       </div>
+
+      {/* Image Gallery */}
+      {images.length > 0 && (
+        <>
+          <h2 style={{ marginTop: '2rem' }}>Galerie d'images</h2>
+          <div className="image-grid">
+            {images.map((img, idx) => (
+              <div 
+                key={idx} 
+                className="image-preview"
+                onClick={() => {
+                  setLightboxIndex(idx)
+                  setLightboxOpen(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <img src={img} alt={`${creature.name} ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -641,6 +753,8 @@ export function BaseDetail() {
   const navigate = useNavigate()
   const [base, setBase] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   useEffect(() => {
     fetchBase()
@@ -708,6 +822,10 @@ export function BaseDetail() {
         <ImageGallery 
           images={images}
           title={base.name}
+          isOpen={lightboxOpen}
+          setIsOpen={setLightboxOpen}
+          currentIndex={lightboxIndex}
+          setCurrentIndex={setLightboxIndex}
         />
 
         <h1>{base.name}</h1>
@@ -736,6 +854,28 @@ export function BaseDetail() {
           )}
         </div>
       </div>
+
+      {/* Image Gallery */}
+      {images.length > 0 && (
+        <>
+          <h2 style={{ marginTop: '2rem' }}>Galerie d'images</h2>
+          <div className="image-grid">
+            {images.map((img, idx) => (
+              <div 
+                key={idx} 
+                className="image-preview"
+                onClick={() => {
+                  setLightboxIndex(idx)
+                  setLightboxOpen(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <img src={img} alt={`${base.name} ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

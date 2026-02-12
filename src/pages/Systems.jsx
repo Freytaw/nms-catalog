@@ -7,13 +7,17 @@ import ImageUpload from '../components/ImageUpload'
 function Systems() {
   const location = useLocation()
   const navigate = useNavigate()
+  
+  // Default "Secteur Inconnu" UUID
+  const UNKNOWN_SECTOR_ID = '00000000-0000-0000-0000-000000000000'
+  
   const [systems, setSystems] = useState([])
   const [sectors, setSectors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSystem, setEditingSystem] = useState(null)
   const [formData, setFormData] = useState({
-    sector_id: '',
+    sector_id: UNKNOWN_SECTOR_ID,
     name: '',
     coordinates: '',
     star_class: '',
@@ -81,6 +85,10 @@ function Systems() {
           .eq('id', editingSystem.id)
         
         if (error) throw error
+        
+        // Redirect to the updated system's detail page
+        navigate(`/systems/${editingSystem.id}`)
+        return
       } else {
         const { data, error } = await supabase
           .from('systems')
@@ -165,7 +173,7 @@ function Systems() {
     setShowForm(false)
     setEditingSystem(null)
     setFormData({
-      sector_id: '',
+      sector_id: UNKNOWN_SECTOR_ID,
       name: '',
       coordinates: '',
       star_class: '',

@@ -77,6 +77,10 @@ function Creatures() {
           .eq('id', editingCreature.id)
         
         if (error) throw error
+        
+        // Redirect to the updated creature's detail page
+        navigate(`/creatures/${editingCreature.id}`)
+        return
       } else {
         const { data, error } = await supabase
           .from('creatures')

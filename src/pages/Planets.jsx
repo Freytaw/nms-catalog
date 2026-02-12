@@ -79,6 +79,10 @@ function Planets() {
           .eq('id', editingPlanet.id)
         
         if (error) throw error
+        
+        // Redirect to the updated planet's detail page
+        navigate(`/planets/${editingPlanet.id}`)
+        return
       } else {
         const { data, error } = await supabase
           .from('planets')

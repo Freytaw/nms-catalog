@@ -60,6 +60,10 @@ function Sectors() {
           .eq('id', editingSector.id)
         
         if (error) throw error
+        
+        // Redirect to the updated sector's detail page
+        navigate(`/sectors/${editingSector.id}`)
+        return
       } else {
         const { data, error } = await supabase
           .from('sectors')

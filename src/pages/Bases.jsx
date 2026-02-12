@@ -72,6 +72,10 @@ function Bases() {
           .eq('id', editingBase.id)
         
         if (error) throw error
+        
+        // Redirect to the updated base's detail page
+        navigate(`/bases/${editingBase.id}`)
+        return
       } else {
         const { data, error } = await supabase
           .from('bases')

@@ -19,7 +19,6 @@ function Planets() {
     climate: '',
     sentinels: '',
     resources: '',
-    fauna_discovered: 0,
     fauna_total: 0,
     flora_discovered: 0,
     minerals_discovered: 0,
@@ -134,7 +133,6 @@ function Planets() {
       climate: planet.climate || '',
       sentinels: planet.sentinels || '',
       resources: planet.resources || '',
-      fauna_discovered: planet.fauna_discovered || 0,
       fauna_total: planet.fauna_total || 0,
       flora_discovered: planet.flora_discovered || 0,
       minerals_discovered: planet.minerals_discovered || 0,
@@ -155,7 +153,6 @@ function Planets() {
       climate: '',
       sentinels: '',
       resources: '',
-      fauna_discovered: 0,
       fauna_total: 0,
       flora_discovered: 0,
       minerals_discovered: 0,
@@ -268,13 +265,16 @@ function Planets() {
 
             <div className="form-group">
               <label className="form-label">Faune découverte</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Ex: 5"
-                value={formData.fauna_discovered}
-                onChange={(e) => setFormData({ ...formData, fauna_discovered: parseInt(e.target.value) || 0 })}
-              />
+              <p style={{ 
+                padding: '0.75rem', 
+                backgroundColor: 'var(--nms-dark)', 
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--nms-cyan)',
+                color: 'var(--nms-gray)',
+                fontSize: '0.875rem'
+              }}>
+                🔢 Calculé automatiquement en fonction du nombre de créatures associées à cette planète
+              </p>
             </div>
 
             <div className="form-group">

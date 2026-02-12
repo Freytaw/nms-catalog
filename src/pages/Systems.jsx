@@ -39,6 +39,11 @@ function Systems() {
       handleEdit(location.state.editItem)
       // Clear the state
       window.history.replaceState({}, document.title)
+    } else if (location.state?.createWithSectorId) {
+      setFormData({ ...formData, sector_id: location.state.createWithSectorId })
+      setShowForm(true)
+      // Clear the state
+      window.history.replaceState({}, document.title)
     }
   }, [location])
 

@@ -38,6 +38,11 @@ function Planets() {
       handleEdit(location.state.editItem)
       // Clear the state
       window.history.replaceState({}, document.title)
+    } else if (location.state?.createWithSystemId) {
+      setFormData({ ...formData, system_id: location.state.createWithSystemId })
+      setShowForm(true)
+      // Clear the state
+      window.history.replaceState({}, document.title)
     }
   }, [location])
 

@@ -30,6 +30,11 @@ function Bases() {
       handleEdit(location.state.editItem)
       // Clear the state
       window.history.replaceState({}, document.title)
+    } else if (location.state?.createWithPlanetId) {
+      setFormData({ ...formData, planet_id: location.state.createWithPlanetId })
+      setShowForm(true)
+      // Clear the state
+      window.history.replaceState({}, document.title)
     }
   }, [location])
 

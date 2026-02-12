@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Database, Globe, Edit } from 'lucide-react'
+import { ArrowLeft, Database, Globe, Edit, Plus, Users, Building } from 'lucide-react'
 import ImageGallery from '../components/ImageGallery'
 
 export function SectorDetail() {
@@ -95,7 +95,16 @@ export function SectorDetail() {
         </div>
       </div>
 
-      <h2>Systèmes de ce secteur ({systems.length})</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2>Systèmes de ce secteur ({systems.length})</h2>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/systems', { state: { createWithSectorId: sector.id } })}
+        >
+          <Plus size={20} />
+          Ajouter un système
+        </button>
+      </div>
       {systems.length === 0 ? (
         <div className="empty-state">
           <Database size={64} />
@@ -337,7 +346,16 @@ export function SystemDetail() {
         </div>
       </div>
 
-      <h2>Planètes de ce système ({planets.length})</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2>Planètes de ce système ({planets.length})</h2>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/planets', { state: { createWithSystemId: system.id } })}
+        >
+          <Plus size={20} />
+          Ajouter une planète
+        </button>
+      </div>
       {planets.length === 0 ? (
         <div className="empty-state">
           <Globe size={64} />
@@ -345,8 +363,25 @@ export function SystemDetail() {
         </div>
       ) : (
         <div className="grid grid-3">
-          {planets.map((planet) => (
+          {planets.map((planet) => {
+            const images = planet.images || []
+            const mainImage = images[0]
+            
+            return (
             <div key={planet.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={planet.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '150px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
               <div className="card-header">
                 <Link to={`/planets/${planet.id}`} className="card-title">
                   {planet.name}
@@ -364,7 +399,8 @@ export function SystemDetail() {
                 )}
               </div>
             </div>
-          ))}
+          )
+          })}
         </div>
       )}
 
@@ -533,15 +569,41 @@ export function PlanetDetail() {
         </div>
       </div>
 
-      <h2>Créatures ({creatures.length})</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2>Créatures ({creatures.length})</h2>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/creatures', { state: { createWithPlanetId: planet.id } })}
+        >
+          <Plus size={20} />
+          Ajouter une créature
+        </button>
+      </div>
       {creatures.length === 0 ? (
         <div className="empty-state" style={{ marginBottom: '2rem' }}>
           <p>Aucune créature découverte</p>
         </div>
       ) : (
         <div className="grid grid-3" style={{ marginBottom: '2rem' }}>
-          {creatures.map((creature) => (
+          {creatures.map((creature) => {
+            const images = creature.images || []
+            const mainImage = images[0]
+            
+            return (
             <div key={creature.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={creature.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '150px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
               <div className="card-header">
                 <Link to={`/creatures/${creature.id}`} className="card-title">
                   {creature.name}
@@ -564,19 +626,46 @@ export function PlanetDetail() {
                 )}
               </div>
             </div>
-          ))}
+          )
+          })}
         </div>
       )}
 
-      <h2>Bases ({bases.length})</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2>Bases ({bases.length})</h2>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/bases', { state: { createWithPlanetId: planet.id } })}
+        >
+          <Plus size={20} />
+          Ajouter une base
+        </button>
+      </div>
       {bases.length === 0 ? (
         <div className="empty-state">
           <p>Aucune base construite</p>
         </div>
       ) : (
         <div className="grid grid-2">
-          {bases.map((base) => (
+          {bases.map((base) => {
+            const images = base.images || []
+            const mainImage = images[0]
+            
+            return (
             <div key={base.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={base.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '150px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
               <div className="card-header">
                 <h3 className="card-title">{base.name}</h3>
               </div>
@@ -592,7 +681,8 @@ export function PlanetDetail() {
                 )}
               </div>
             </div>
-          ))}
+          )
+          })}
         </div>
       )}
 

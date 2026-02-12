@@ -4,21 +4,21 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 function ImageGallery({ images, title, isOpen, setIsOpen, currentIndex, setCurrentIndex }) {
   if (!images || images.length === 0) return null
 
-  // Lock/unlock body scroll when lightbox opens/closes
+  // Lock body scroll and scroll to top when lightbox opens
   useEffect(() => {
     if (isOpen) {
-      // Save current scroll position
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.width = '100%'
+      // Scroll to top for lightbox visibility
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden'
     } else {
-      // Restore scroll position
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.width = ''
-      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      // Restore body scroll
+      document.body.style.overflow = ''
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = ''
     }
   }, [isOpen])
 
@@ -148,7 +148,6 @@ function ImageGallery({ images, title, isOpen, setIsOpen, currentIndex, setCurre
             onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: '90vw',
-              maxHeight: '90vh',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -160,7 +159,7 @@ function ImageGallery({ images, title, isOpen, setIsOpen, currentIndex, setCurre
               alt={`${title} ${currentIndex + 1}`}
               style={{
                 maxWidth: '100%',
-                maxHeight: '85vh',
+                maxHeight: '75vh',
                 objectFit: 'contain',
                 borderRadius: 'var(--radius-md)'
               }}
@@ -170,7 +169,8 @@ function ImageGallery({ images, title, isOpen, setIsOpen, currentIndex, setCurre
               fontSize: '0.875rem',
               background: 'rgba(255, 255, 255, 0.1)',
               padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-md)'
+              borderRadius: 'var(--radius-md)',
+              flexShrink: 0
             }}>
               {currentIndex + 1} / {images.length}
             </div>

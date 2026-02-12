@@ -513,6 +513,23 @@ export function PlanetDetail() {
           {planet.notes && (
             <p style={{ marginTop: '1rem', whiteSpace: 'pre-wrap' }}>{planet.notes}</p>
           )}
+          {planet.portal_coordinates && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <h3 style={{ marginBottom: '0.5rem' }}>Coordonnées du portail</h3>
+              <img 
+                src={planet.portal_coordinates} 
+                alt="Coordonnées du portail"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '300px',
+                  objectFit: 'contain',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--nms-cyan)',
+                  backgroundColor: 'var(--nms-dark)'
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

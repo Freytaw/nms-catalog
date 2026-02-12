@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Globe } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import SingleImageUpload from '../components/SingleImageUpload'
 
 function Planets() {
   const location = useLocation()
@@ -22,6 +23,7 @@ function Planets() {
     fauna_total: 0,
     flora_discovered: 0,
     minerals_discovered: 0,
+    portal_coordinates: '',
     notes: '',
     images: []
   })
@@ -131,6 +133,7 @@ function Planets() {
       fauna_total: planet.fauna_total || 0,
       flora_discovered: planet.flora_discovered || 0,
       minerals_discovered: planet.minerals_discovered || 0,
+      portal_coordinates: planet.portal_coordinates || '',
       notes: planet.notes || '',
       images: planet.images || []
     })
@@ -151,6 +154,7 @@ function Planets() {
       fauna_total: 0,
       flora_discovered: 0,
       minerals_discovered: 0,
+      portal_coordinates: '',
       notes: '',
       images: []
     })
@@ -300,6 +304,12 @@ function Planets() {
                 onChange={(e) => setFormData({ ...formData, minerals_discovered: parseInt(e.target.value) || 0 })}
               />
             </div>
+
+            <SingleImageUpload
+              imageUrl={formData.portal_coordinates}
+              onChange={(url) => setFormData({ ...formData, portal_coordinates: url })}
+              label="Coordonnées du portail"
+            />
 
             <ImageUpload
               images={formData.images}

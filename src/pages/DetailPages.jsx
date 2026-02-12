@@ -679,7 +679,9 @@ export function PlanetDetail() {
                 />
               )}
               <div className="card-header">
-                <h3 className="card-title">{base.name}</h3>
+                <Link to={`/bases/${base.id}`} className="card-title">
+                  {base.name}
+                </Link>
               </div>
               <div className="card-content">
                 {base.location_description && (

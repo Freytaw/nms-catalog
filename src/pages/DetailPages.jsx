@@ -227,7 +227,7 @@ export function SystemDetail() {
       const [systemRes, planetsRes] = await Promise.all([
         supabase.from('systems').select(`
           *,
-          sectors (name)
+          sectors (id, name)
         `).eq('id', id).single(),
         supabase.from('planets').select('*').eq('system_id', id).order('name')
       ])
@@ -274,6 +274,12 @@ export function SystemDetail() {
           <ArrowLeft size={20} />
           Retour aux systèmes
         </Link>
+        {system.sectors && (
+          <Link to={`/sectors/${system.sectors.id}`} className="btn btn-secondary">
+            <ArrowLeft size={20} />
+            Retour au secteur
+          </Link>
+        )}
         <button 
           className="btn btn-primary"
           onClick={() => navigate('/systems', { state: { editItem: system } })}
@@ -448,7 +454,7 @@ export function PlanetDetail() {
       const [planetRes, creaturesRes, basesRes] = await Promise.all([
         supabase.from('planets').select(`
           *,
-          systems (name, sectors(name))
+          systems (id, name, sectors(name))
         `).eq('id', id).single(),
         supabase.from('creatures').select('*').eq('planet_id', id).order('name'),
         supabase.from('bases').select('*').eq('planet_id', id).order('name')
@@ -497,6 +503,12 @@ export function PlanetDetail() {
           <ArrowLeft size={20} />
           Retour aux planètes
         </Link>
+        {planet.systems && (
+          <Link to={`/systems/${planet.systems.id}`} className="btn btn-secondary">
+            <ArrowLeft size={20} />
+            Retour au système
+          </Link>
+        )}
         <button 
           className="btn btn-primary"
           onClick={() => navigate('/planets', { state: { editItem: planet } })}
@@ -729,7 +741,7 @@ export function CreatureDetail() {
         .from('creatures')
         .select(`
           *,
-          planets (name, systems(name, sectors(name)))
+          planets (id, name, systems(name, sectors(name)))
         `)
         .eq('id', id)
         .single()
@@ -772,6 +784,12 @@ export function CreatureDetail() {
           <ArrowLeft size={20} />
           Retour aux créatures
         </Link>
+        {creature.planets && (
+          <Link to={`/planets/${creature.planets.id}`} className="btn btn-secondary">
+            <ArrowLeft size={20} />
+            Retour à la planète
+          </Link>
+        )}
         <button 
           className="btn btn-primary"
           onClick={() => navigate('/creatures', { state: { editItem: creature } })}
@@ -882,7 +900,7 @@ export function BaseDetail() {
         .from('bases')
         .select(`
           *,
-          planets (name, systems(name, sectors(name)))
+          planets (id, name, systems(name, sectors(name)))
         `)
         .eq('id', id)
         .single()
@@ -925,6 +943,12 @@ export function BaseDetail() {
           <ArrowLeft size={20} />
           Retour aux bases
         </Link>
+        {base.planets && (
+          <Link to={`/planets/${base.planets.id}`} className="btn btn-secondary">
+            <ArrowLeft size={20} />
+            Retour à la planète
+          </Link>
+        )}
         <button 
           className="btn btn-primary"
           onClick={() => navigate('/bases', { state: { editItem: base } })}

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Database } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 
 function Systems() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [systems, setSystems] = useState([])
   const [sectors, setSectors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -81,11 +82,18 @@ function Systems() {
         
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('systems')
           .insert([formData])
+          .select()
         
         if (error) throw error
+        
+        // Redirect to the newly created system's detail page
+        if (data && data[0]) {
+          navigate(`/systems/${data[0].id}`)
+          return
+        }
       }
 
       setFormData({

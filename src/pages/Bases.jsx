@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Building } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 
 function Bases() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [bases, setBases] = useState([])
   const [planets, setPlanets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -72,11 +73,18 @@ function Bases() {
         
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('bases')
           .insert([formData])
+          .select()
         
         if (error) throw error
+        
+        // Redirect to the newly created base's detail page
+        if (data && data[0]) {
+          navigate(`/bases/${data[0].id}`)
+          return
+        }
       }
 
       setFormData({

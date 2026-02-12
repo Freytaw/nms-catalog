@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Users } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 
 function Creatures() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [creatures, setCreatures] = useState([])
   const [planets, setPlanets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,11 +78,18 @@ function Creatures() {
         
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('creatures')
           .insert([formData])
+          .select()
         
         if (error) throw error
+        
+        // Redirect to the newly created creature's detail page
+        if (data && data[0]) {
+          navigate(`/creatures/${data[0].id}`)
+          return
+        }
       }
 
       setFormData({

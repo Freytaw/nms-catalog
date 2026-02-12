@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Map } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 
 function Sectors() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [sectors, setSectors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -60,11 +61,18 @@ function Sectors() {
         
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('sectors')
           .insert([formData])
+          .select()
         
         if (error) throw error
+        
+        // Redirect to the newly created sector's detail page
+        if (data && data[0]) {
+          navigate(`/sectors/${data[0].id}`)
+          return
+        }
       }
 
       setFormData({

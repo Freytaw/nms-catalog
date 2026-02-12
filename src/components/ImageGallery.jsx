@@ -1,8 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 function ImageGallery({ images, title, isOpen, setIsOpen, currentIndex, setCurrentIndex }) {
   if (!images || images.length === 0) return null
+
+  // Lock/unlock body scroll when lightbox opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+    } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+    }
+  }, [isOpen])
 
   const openLightbox = (index) => {
     setCurrentIndex(index)

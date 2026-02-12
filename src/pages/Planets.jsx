@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Globe } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
@@ -7,6 +7,7 @@ import SingleImageUpload from '../components/SingleImageUpload'
 
 function Planets() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [planets, setPlanets] = useState([])
   const [systems, setSystems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -79,11 +80,18 @@ function Planets() {
         
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('planets')
           .insert([formData])
+          .select()
         
         if (error) throw error
+        
+        // Redirect to the newly created planet's detail page
+        if (data && data[0]) {
+          navigate(`/planets/${data[0].id}`)
+          return
+        }
       }
 
       setFormData({
@@ -93,8 +101,10 @@ function Planets() {
         climate: '',
         sentinels: '',
         resources: '',
-        fauna_count: 0,
-        flora_count: 0,
+        fauna_total: 0,
+        flora_discovered: 0,
+        minerals_discovered: 0,
+        portal_coordinates: '',
         notes: '',
         images: []
       })

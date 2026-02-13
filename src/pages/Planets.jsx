@@ -252,18 +252,13 @@ function Planets() {
 
             <div className="form-group">
               <label className="form-label">Sentinelles</label>
-              <select
-                className="form-select"
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: Absentes, Éparses, Observatrices, Agressives, Hostiles"
                 value={formData.sentinels}
                 onChange={(e) => setFormData({ ...formData, sentinels: e.target.value })}
-              >
-                <option value="">Sélectionner</option>
-                <option value="Absentes">Absentes</option>
-                <option value="Éparses">Éparses</option>
-                <option value="Observatrices">Observatrices</option>
-                <option value="Agressives">Agressives</option>
-                <option value="Hostiles">Hostiles</option>
-              </select>
+              />
             </div>
 
             <div className="form-group">

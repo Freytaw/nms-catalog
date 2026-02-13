@@ -1205,15 +1205,16 @@ export function PointOfInterestDetail() {
       {images.length > 0 && (
         <>
           <h2 style={{ marginBottom: '1rem' }}>Galerie d'images</h2>
-          <div className="image-thumbnails" style={{ marginBottom: '2rem' }}>
+          <div className="image-grid">
             {images.map((img, idx) => (
               <div 
                 key={idx} 
-                className="thumbnail"
+                className="image-preview"
                 onClick={() => {
                   setLightboxIndex(idx)
                   setLightboxOpen(true)
                 }}
+                style={{ cursor: 'pointer' }}
               >
                 <img src={img} alt={`${poi.name} ${idx + 1}`} />
               </div>

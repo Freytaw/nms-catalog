@@ -235,7 +235,8 @@ function PointsOfInterest() {
               <label className="form-label">Images</label>
               <ImageUpload
                 images={formData.images}
-                onImagesChange={(newImages) => setFormData({ ...formData, images: newImages })}
+                onChange={(newImages) => setFormData({ ...formData, images: newImages })}
+                label=""
               />
             </div>
 

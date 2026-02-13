@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom'
-import { Rocket, Globe, Database, Map, Home, MapPin } from 'lucide-react'
+import { Rocket, Globe, Database, Map, Home, MapPin, Users, Building } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import Sectors from './pages/Sectors'
 import Systems from './pages/Systems'
@@ -47,11 +47,13 @@ function App() {
               </li>
               <li>
                 <NavLink to="/creatures" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                  <Users size={18} />
                   Créatures
                 </NavLink>
               </li>
               <li>
                 <NavLink to="/bases" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                  <Building size={18} />
                   Bases
                 </NavLink>
               </li>

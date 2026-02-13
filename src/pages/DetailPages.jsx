@@ -441,6 +441,7 @@ export function PlanetDetail() {
   const [planet, setPlanet] = useState(null)
   const [creatures, setCreatures] = useState([])
   const [bases, setBases] = useState([])
+  const [pointsOfInterest, setPointsOfInterest] = useState([])
   const [loading, setLoading] = useState(true)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
@@ -451,22 +452,25 @@ export function PlanetDetail() {
 
   async function fetchPlanetData() {
     try {
-      const [planetRes, creaturesRes, basesRes] = await Promise.all([
+      const [planetRes, creaturesRes, basesRes, poisRes] = await Promise.all([
         supabase.from('planets').select(`
           *,
           systems (id, name, sectors(name))
         `).eq('id', id).single(),
         supabase.from('creatures').select('*').eq('planet_id', id).order('name'),
-        supabase.from('bases').select('*').eq('planet_id', id).order('name')
+        supabase.from('bases').select('*').eq('planet_id', id).order('name'),
+        supabase.from('points_of_interest').select('*').eq('planet_id', id).order('name')
       ])
 
       if (planetRes.error) throw planetRes.error
       if (creaturesRes.error) throw creaturesRes.error
       if (basesRes.error) throw basesRes.error
+      if (poisRes.error) throw poisRes.error
 
       setPlanet(planetRes.data)
       setCreatures(creaturesRes.data || [])
       setBases(basesRes.data || [])
+      setPointsOfInterest(poisRes.data || [])
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -692,6 +696,60 @@ export function PlanetDetail() {
                 )}
                 {base.notes && (
                   <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{base.notes}</p>
+                )}
+              </div>
+            </div>
+          )
+          })}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', marginTop: '2rem' }}>
+        <h2>Points d'Intérêt ({pointsOfInterest.length})</h2>
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/points-of-interest', { state: { createWithPlanetId: planet.id } })}
+        >
+          <Plus size={20} />
+          Ajouter un point d'intérêt
+        </button>
+      </div>
+      {pointsOfInterest.length === 0 ? (
+        <div className="empty-state">
+          <p>Aucun point d'intérêt enregistré</p>
+        </div>
+      ) : (
+        <div className="grid grid-2">
+          {pointsOfInterest.map((poi) => {
+            const images = poi.images || []
+            const mainImage = images[0]
+            
+            return (
+            <div key={poi.id} className="card">
+              {mainImage && (
+                <img 
+                  src={mainImage} 
+                  alt={poi.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '150px', 
+                    objectFit: 'cover', 
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1rem'
+                  }}
+                />
+              )}
+              <div className="card-header">
+                <Link to={`/points-of-interest/${poi.id}`} className="card-title">
+                  {poi.name}
+                </Link>
+              </div>
+              <div className="card-content">
+                {poi.type && (
+                  <p><strong>Type :</strong> {poi.type}</p>
+                )}
+                {poi.notes && (
+                  <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{poi.notes}</p>
                 )}
               </div>
             </div>
@@ -1021,3 +1079,149 @@ export function BaseDetail() {
     </div>
   )
 }
+
+export function PointOfInterestDetail() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [poi, setPoi] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+
+  useEffect(() => {
+    fetchPOI()
+  }, [id])
+
+  async function fetchPOI() {
+    try {
+      const { data, error } = await supabase
+        .from('points_of_interest')
+        .select(`
+          *,
+          planets (id, name, systems(name, sectors(name)))
+        `)
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+      setPoi(data)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error fetching point of interest:', error)
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container">
+        <p>Chargement...</p>
+      </div>
+    )
+  }
+
+  if (!poi) {
+    return (
+      <div className="container">
+        <p>Point d'intérêt non trouvé</p>
+        <Link to="/points-of-interest" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux points d'intérêt
+        </Link>
+      </div>
+    )
+  }
+
+  const images = poi.images || []
+
+  return (
+    <div className="container">
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link to="/points-of-interest" className="btn btn-secondary">
+          <ArrowLeft size={20} />
+          Retour aux points d'intérêt
+        </Link>
+        {poi.planets && (
+          <Link to={`/planets/${poi.planets.id}`} className="btn btn-secondary">
+            <ArrowLeft size={20} />
+            Retour à la planète
+          </Link>
+        )}
+        <button 
+          className="btn btn-primary"
+          onClick={() => navigate('/points-of-interest', { state: { editItem: poi } })}
+        >
+          <Edit size={20} />
+          Modifier
+        </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        <ImageGallery 
+          images={images}
+          title={poi.name}
+          isOpen={lightboxOpen}
+          setIsOpen={setLightboxOpen}
+          currentIndex={lightboxIndex}
+          setCurrentIndex={setLightboxIndex}
+        />
+        <div className="card-header">
+          <h1>{poi.name}</h1>
+        </div>
+        <div className="card-content">
+          {poi.type && (
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>Type:</strong> {poi.type}
+            </div>
+          )}
+          
+          {poi.planets && (
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>Planète:</strong> {poi.planets.name}
+              {poi.planets.systems && (
+                <>
+                  <br />
+                  <strong>Système:</strong> {poi.planets.systems.name}
+                  {poi.planets.systems.sectors && (
+                    <>
+                      <br />
+                      <strong>Secteur:</strong> {poi.planets.systems.sectors.name}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {poi.notes && (
+            <div style={{ marginTop: '1rem' }}>
+              <strong>Notes:</strong>
+              <p style={{ marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>{poi.notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {images.length > 0 && (
+        <>
+          <h2 style={{ marginBottom: '1rem' }}>Galerie d'images</h2>
+          <div className="image-thumbnails" style={{ marginBottom: '2rem' }}>
+            {images.map((img, idx) => (
+              <div 
+                key={idx} 
+                className="thumbnail"
+                onClick={() => {
+                  setLightboxIndex(idx)
+                  setLightboxOpen(true)
+                }}
+              >
+                <img src={img} alt={`${poi.name} ${idx + 1}`} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+

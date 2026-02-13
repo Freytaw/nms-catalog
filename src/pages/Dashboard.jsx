@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { Map, Database, Globe, Users, Building } from 'lucide-react'
+import { Map, Database, Globe, Users, Building, MapPin } from 'lucide-react'
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -9,7 +9,8 @@ function Dashboard() {
     systems: 0,
     planets: 0,
     creatures: 0,
-    bases: 0
+    bases: 0,
+    pointsOfInterest: 0
   })
   const [loading, setLoading] = useState(true)
 
@@ -24,13 +25,15 @@ function Dashboard() {
         { count: systemsCount },
         { count: planetsCount },
         { count: creaturesCount },
-        { count: basesCount }
+        { count: basesCount },
+        { count: poisCount }
       ] = await Promise.all([
         supabase.from('sectors').select('*', { count: 'exact', head: true }),
         supabase.from('systems').select('*', { count: 'exact', head: true }),
         supabase.from('planets').select('*', { count: 'exact', head: true }),
         supabase.from('creatures').select('*', { count: 'exact', head: true }),
-        supabase.from('bases').select('*', { count: 'exact', head: true })
+        supabase.from('bases').select('*', { count: 'exact', head: true }),
+        supabase.from('points_of_interest').select('*', { count: 'exact', head: true })
       ])
 
       setStats({
@@ -38,7 +41,8 @@ function Dashboard() {
         systems: systemsCount || 0,
         planets: planetsCount || 0,
         creatures: creaturesCount || 0,
-        bases: basesCount || 0
+        bases: basesCount || 0,
+        pointsOfInterest: poisCount || 0
       })
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -89,6 +93,12 @@ function Dashboard() {
           <div className="stat-value">{stats.bases}</div>
           <div className="stat-label">Bases</div>
         </Link>
+
+        <Link to="/points-of-interest" className="stat-card">
+          <MapPin size={32} style={{ margin: '0 auto 1rem', color: 'var(--nms-primary)' }} />
+          <div className="stat-value">{stats.pointsOfInterest}</div>
+          <div className="stat-label">Points d'Intérêt</div>
+        </Link>
       </div>
 
       <div className="card" style={{ marginTop: '2rem' }}>
@@ -103,6 +113,7 @@ function Dashboard() {
             <li><strong>Planètes</strong> : Mondes avec leur climat, ressources et faune</li>
             <li><strong>Créatures</strong> : Faune découverte avec leurs particularités</li>
             <li><strong>Bases</strong> : Tes avant-postes et refuges construits</li>
+            <li><strong>Points d'Intérêt</strong> : Ruines, monuments et sites remarquables</li>
           </ul>
           <p style={{ marginTop: '1rem' }}>
             Commence par créer un secteur, puis ajoute-y des systèmes !

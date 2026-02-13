@@ -82,12 +82,24 @@ CREATE TABLE bases (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
 
+-- Table: points_of_interest
+CREATE TABLE points_of_interest (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  planet_id UUID REFERENCES planets(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  type TEXT,
+  notes TEXT,
+  images JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS) pour la sécurité
 ALTER TABLE sectors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE systems ENABLE ROW LEVEL SECURITY;
 ALTER TABLE planets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE creatures ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE points_of_interest ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour permettre toutes les opérations (pour une utilisation personnelle)
 -- Note: Pour un usage partagé, tu devrais créer des policies plus restrictives
@@ -97,9 +109,11 @@ CREATE POLICY "Enable all operations for systems" ON systems FOR ALL USING (true
 CREATE POLICY "Enable all operations for planets" ON planets FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all operations for creatures" ON creatures FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all operations for bases" ON bases FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Enable all operations for points_of_interest" ON points_of_interest FOR ALL USING (true) WITH CHECK (true);
 
 -- Indexes pour améliorer les performances
 CREATE INDEX idx_systems_sector_id ON systems(sector_id);
 CREATE INDEX idx_planets_system_id ON planets(system_id);
 CREATE INDEX idx_creatures_planet_id ON creatures(planet_id);
 CREATE INDEX idx_bases_planet_id ON bases(planet_id);
+CREATE INDEX idx_points_of_interest_planet_id ON points_of_interest(planet_id);

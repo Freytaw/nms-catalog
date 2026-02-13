@@ -1,12 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom'
-import { Rocket, Globe, Database, Map, Home } from 'lucide-react'
+import { Rocket, Globe, Database, Map, Home, MapPin } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import Sectors from './pages/Sectors'
 import Systems from './pages/Systems'
 import Planets from './pages/Planets'
 import Creatures from './pages/Creatures'
 import Bases from './pages/Bases'
-import { SectorDetail, SystemDetail, PlanetDetail, CreatureDetail, BaseDetail } from './pages/DetailPages'
+import PointsOfInterest from './pages/PointsOfInterest'
+import { SectorDetail, SystemDetail, PlanetDetail, CreatureDetail, BaseDetail, PointOfInterestDetail } from './pages/DetailPages'
 import './index.css'
 
 function App() {
@@ -54,6 +55,12 @@ function App() {
                   Bases
                 </NavLink>
               </li>
+              <li>
+                <NavLink to="/points-of-interest" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                  <MapPin size={18} />
+                  Points d'Intérêt
+                </NavLink>
+              </li>
             </ul>
           </div>
         </nav>
@@ -71,6 +78,8 @@ function App() {
             <Route path="/creatures/:id" element={<CreatureDetail />} />
             <Route path="/bases" element={<Bases />} />
             <Route path="/bases/:id" element={<BaseDetail />} />
+            <Route path="/points-of-interest" element={<PointsOfInterest />} />
+            <Route path="/points-of-interest/:id" element={<PointOfInterestDetail />} />
           </Routes>
         </main>
       </div>

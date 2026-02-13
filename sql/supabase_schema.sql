@@ -76,6 +76,7 @@ CREATE TABLE bases (
   planet_id UUID REFERENCES planets(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   location_description TEXT,
+  coordinates TEXT,
   resources_nearby TEXT,
   notes TEXT,
   images JSONB DEFAULT '[]'::jsonb,
@@ -88,6 +89,7 @@ CREATE TABLE points_of_interest (
   planet_id UUID REFERENCES planets(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   type TEXT,
+  coordinates TEXT,
   notes TEXT,
   images JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL

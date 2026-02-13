@@ -16,6 +16,7 @@ function Bases() {
     planet_id: '',
     name: '',
     location_description: '',
+    coordinates: '',
     resources_nearby: '',
     notes: '',
     images: []
@@ -131,6 +132,7 @@ function Bases() {
       planet_id: base.planet_id,
       name: base.name,
       location_description: base.location_description || '',
+      coordinates: base.coordinates || '',
       resources_nearby: base.resources_nearby || '',
       notes: base.notes || '',
       images: base.images || []
@@ -145,6 +147,7 @@ function Bases() {
       planet_id: '',
       name: '',
       location_description: '',
+      coordinates: '',
       resources_nearby: '',
       notes: '',
       images: []
@@ -212,6 +215,17 @@ function Bases() {
                 placeholder="Ex: Plaine de Fubuki, Promontoire forestier"
                 value={formData.location_description}
                 onChange={(e) => setFormData({ ...formData, location_description: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Coordonnées</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: +12.34, -56.78"
+                value={formData.coordinates}
+                onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
               />
             </div>
 

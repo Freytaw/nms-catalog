@@ -16,6 +16,7 @@ function PointsOfInterest() {
     planet_id: '',
     name: '',
     type: '',
+    coordinates: '',
     notes: '',
     images: []
   })
@@ -115,6 +116,7 @@ function PointsOfInterest() {
       planet_id: poi.planet_id,
       name: poi.name,
       type: poi.type || '',
+      coordinates: poi.coordinates || '',
       notes: poi.notes || '',
       images: poi.images || []
     })
@@ -145,6 +147,7 @@ function PointsOfInterest() {
       planet_id: '',
       name: '',
       type: '',
+      coordinates: '',
       notes: '',
       images: []
     })
@@ -160,7 +163,7 @@ function PointsOfInterest() {
 
   return (
     <div className="container">
-      <div className="header">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>
           <MapPin size={32} />
           Points d'Intérêt
@@ -170,7 +173,7 @@ function PointsOfInterest() {
           onClick={() => setShowForm(!showForm)}
         >
           <Plus size={20} />
-          {showForm ? 'Annuler' : 'Ajouter un point d\'intérêt'}
+          {showForm ? 'Annuler' : 'Nouveau Point d\'Intérêt'}
         </button>
       </div>
 
@@ -217,6 +220,17 @@ function PointsOfInterest() {
                 placeholder="Ex: Ruines, Monument, Épave, Site archéologique"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Coordonnées</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex: +12.34, -56.78"
+                value={formData.coordinates}
+                onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
               />
             </div>
 

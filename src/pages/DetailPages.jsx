@@ -1046,6 +1046,9 @@ export function BaseDetail() {
           {base.location_description && (
             <p><strong>Localisation :</strong> {base.location_description}</p>
           )}
+          {base.coordinates && (
+            <p><strong>Coordonnées :</strong> {base.coordinates}</p>
+          )}
           {base.resources_nearby && (
             <p><strong>Ressources à proximité :</strong> {base.resources_nearby}</p>
           )}
@@ -1172,6 +1175,12 @@ export function PointOfInterestDetail() {
           {poi.type && (
             <div style={{ marginBottom: '1rem' }}>
               <strong>Type:</strong> {poi.type}
+            </div>
+          )}
+          
+          {poi.coordinates && (
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>Coordonnées:</strong> {poi.coordinates}
             </div>
           )}
           

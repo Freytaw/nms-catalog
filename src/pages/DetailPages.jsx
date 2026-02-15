@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Database, Globe, Edit, Plus, Users, Building } from 'lucide-react'
+import { ArrowLeft, Database, Globe, Edit, Plus, Users, Building, MapPin } from 'lucide-react'
 import ImageGallery from '../components/ImageGallery'
+import PlanetMapCanvas from '../components/PlanetMapCanvas'
 
 export function SectorDetail() {
   const { id } = useParams()
@@ -445,6 +446,7 @@ export function PlanetDetail() {
   const [loading, setLoading] = useState(true)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [showMap, setShowMap] = useState(false)
 
   useEffect(() => {
     fetchPlanetData()
@@ -757,6 +759,75 @@ export function PlanetDetail() {
           })}
         </div>
       )}
+
+      {/* Planetary Map Section */}
+      <div style={{ marginTop: '3rem' }}>
+        <button 
+          className="btn btn-primary"
+          onClick={() => setShowMap(!showMap)}
+          style={{ marginBottom: '1rem' }}
+        >
+          <MapPin size={20} />
+          {showMap ? 'Masquer la carte' : 'Générer carte planétaire'}
+        </button>
+
+        {showMap && (
+          <div>
+            <h2 style={{ marginBottom: '1rem' }}>Carte de {planet.name}</h2>
+            
+            {/* Info message if no coordinates */}
+            {bases.filter(b => b.coordinates).length === 0 && 
+             pointsOfInterest.filter(p => p.coordinates).length === 0 && (
+              <p style={{ 
+                color: 'var(--nms-secondary)', 
+                marginBottom: '1rem',
+                padding: '1rem',
+                backgroundColor: 'rgba(255, 0, 110, 0.1)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--nms-secondary)'
+              }}>
+                ⚠️ Aucune coordonnée enregistrée pour cette planète. 
+                Ajoutez des coordonnées aux bases et points d'intérêt pour les voir apparaître sur la carte.
+              </p>
+            )}
+
+            {/* Canvas */}
+            <div style={{ marginBottom: '1rem' }}>
+              <PlanetMapCanvas
+                planet={planet}
+                bases={bases}
+                pointsOfInterest={pointsOfInterest}
+              />
+            </div>
+
+            {/* Stats */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem',
+              marginTop: '1rem'
+            }}>
+              <div className="card">
+                <div className="card-content">
+                  <strong>Bases cartographiées</strong>
+                  <p style={{ fontSize: '1.5rem', color: 'var(--nms-primary)', margin: '0.5rem 0' }}>
+                    {bases.filter(b => b.coordinates).length} / {bases.length}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="card">
+                <div className="card-content">
+                  <strong>POI cartographiés</strong>
+                  <p style={{ fontSize: '1.5rem', color: 'var(--nms-secondary)', margin: '0.5rem 0' }}>
+                    {pointsOfInterest.filter(p => p.coordinates).length} / {pointsOfInterest.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Image Gallery */}
       {images.length > 0 && (

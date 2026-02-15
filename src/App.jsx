@@ -1,3 +1,4 @@
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom'
 import { Rocket, Globe, Database, Map, Home, MapPin, Users, Building } from 'lucide-react'
 import Dashboard from './pages/Dashboard'

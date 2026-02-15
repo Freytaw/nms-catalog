@@ -12,6 +12,7 @@ function Bases() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingBase, setEditingBase] = useState(null)
+  const [coordinatesError, setCoordinatesError] = useState('')
   const [formData, setFormData] = useState({
     planet_id: '',
     name: '',
@@ -21,6 +22,39 @@ function Bases() {
     notes: '',
     images: []
   })
+
+  // Validate coordinates format: "+12.34, -56.78"
+  function validateCoordinates(coords) {
+    if (!coords || coords.trim() === '') {
+      setCoordinatesError('')
+      return true // Empty is valid (optional field)
+    }
+
+    // Regex: [+/-]number.number, [+/-]number.number
+    const regex = /^([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)$/
+    const match = coords.match(regex)
+
+    if (!match) {
+      setCoordinatesError('Format invalide. Utilisez : +12.34, -56.78')
+      return false
+    }
+
+    const lat = parseFloat(match[1])
+    const lon = parseFloat(match[2])
+
+    if (lat < -180 || lat > 180) {
+      setCoordinatesError('Latitude doit être entre -180 et +180')
+      return false
+    }
+
+    if (lon < -180 || lon > 180) {
+      setCoordinatesError('Longitude doit être entre -180 et +180')
+      return false
+    }
+
+    setCoordinatesError('')
+    return true
+  }
 
   useEffect(() => {
     fetchData()
@@ -64,6 +98,11 @@ function Bases() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    
+    // Validate coordinates before submitting
+    if (!validateCoordinates(formData.coordinates)) {
+      return // Stop if validation fails
+    }
     
     try {
       if (editingBase) {
@@ -143,6 +182,7 @@ function Bases() {
   function handleCancel() {
     setShowForm(false)
     setEditingBase(null)
+    setCoordinatesError('')
     setFormData({
       planet_id: '',
       name: '',
@@ -225,8 +265,22 @@ function Bases() {
                 className="form-input"
                 placeholder="Ex: +12.34, -56.78"
                 value={formData.coordinates}
-                onChange={(e) => setFormData({ ...formData, coordinates: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setFormData({ ...formData, coordinates: value })
+                  validateCoordinates(value)
+                }}
+                style={coordinatesError ? { borderColor: 'var(--nms-secondary)' } : {}}
               />
+              {coordinatesError && (
+                <p style={{ 
+                  color: 'var(--nms-secondary)', 
+                  fontSize: '0.875rem', 
+                  marginTop: '0.25rem' 
+                }}>
+                  {coordinatesError}
+                </p>
+              )}
             </div>
 
             <div className="form-group">

@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { ZoomIn, ZoomOut, Maximize2, RotateCcw } from 'lucide-react'
+import { getPOIIcon, isImageIcon } from '../config/poiIcons'
 
 // Planet colors based on type
 const planetColors = {
@@ -12,21 +13,6 @@ const planetColors = {
   'Morte': { primary: '#666666', secondary: '#444444' },
   'Exotique': { primary: '#ff00ff', secondary: '#cc00cc' },
   'Default': { primary: '#00d9ff', secondary: '#0099bb' }
-}
-
-// POI symbols based on type
-const poiSymbols = {
-  'Ruines': '🏛️',
-  'Monument': '🗿',
-  'Épave': '💀',
-  'Site archéologique': '⚱️',
-  'Transmission': '📡',
-  'Portail': '🌀',
-  'Grotte': '🕳️',
-  'Structure': '🏗️',
-  'Observatoire': '🔭',
-  'Tour de communication': '📡',
-  'default': '📍'
 }
 
 function PlanetMapCanvas({ 
@@ -46,10 +32,44 @@ function PlanetMapCanvas({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [canvasSize, setCanvasSize] = useState({ width, height })
+  const [loadedImages, setLoadedImages] = useState({})
+
+  // Preload POI images
+  useEffect(() => {
+    const imagesToLoad = {}
+    const imagePromises = []
+
+    // Collect all unique POI types with image icons
+    const poiTypes = new Set(pointsOfInterest.map(poi => poi.type).filter(Boolean))
+    
+    poiTypes.forEach(type => {
+      const icon = getPOIIcon(type)
+      if (isImageIcon(icon) && !loadedImages[icon]) {
+        const img = new Image()
+        const promise = new Promise((resolve, reject) => {
+          img.onload = () => {
+            imagesToLoad[icon] = img
+            resolve()
+          }
+          img.onerror = reject
+        })
+        img.src = icon
+        imagePromises.push(promise)
+      }
+    })
+
+    if (imagePromises.length > 0) {
+      Promise.all(imagePromises).then(() => {
+        setLoadedImages(prev => ({ ...prev, ...imagesToLoad }))
+      }).catch(err => {
+        console.error('Error loading POI icons:', err)
+      })
+    }
+  }, [pointsOfInterest])
 
   useEffect(() => {
     redraw()
-  }, [planet, bases, pointsOfInterest, scale, offset, canvasSize])
+  }, [planet, bases, pointsOfInterest, scale, offset, canvasSize, loadedImages])
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -124,11 +144,6 @@ function PlanetMapCanvas({
     return planetColors[planetType] || planetColors.Default
   }
 
-  // Get POI symbol
-  function getPOISymbol(poiType) {
-    return poiSymbols[poiType] || poiSymbols.default
-  }
-
   // Draw planet background
   function drawPlanetBackground(ctx, planet, width, height) {
     const colors = getPlanetColors(planet.type)
@@ -181,31 +196,50 @@ function PlanetMapCanvas({
   }
 
   // Draw a marker on the map (with constant size regardless of zoom)
-  function drawMarker(ctx, x, y, symbol, name, color = '#00d9ff', currentScale) {
+  function drawMarker(ctx, x, y, symbol, name, color = '#00d9ff', currentScale, image = null) {
     ctx.save()
     
     // Move to position, then inverse scale to keep marker at constant size
     ctx.translate(x, y)
     ctx.scale(1 / currentScale, 1 / currentScale)
     
-    // Shadow
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
-    ctx.shadowBlur = 5
-    ctx.shadowOffsetY = 2
+    if (image) {
+      // Reset all styles completely for image
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      // Use native image size (should be 64x64) - no resizing to avoid pixel alignment issues
+      const iconSize = image.width || 64
+      ctx.drawImage(image, -iconSize/2, -iconSize/2)
+    } else {
+      // Shadow for emoji markers
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+      ctx.shadowBlur = 5
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      
+      // Pin circle for emoji
+      ctx.fillStyle = color
+      ctx.beginPath()
+      ctx.arc(0, 0, 10, 0, Math.PI * 2)
+      ctx.fill()
+      
+      ctx.shadowColor = 'transparent'
+      
+      // Symbol emoji
+      ctx.font = '20px Arial'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(symbol, 0, 0)
+    }
     
-    // Pin circle
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.arc(0, 0, 10, 0, Math.PI * 2)
-    ctx.fill()
-    
+    // Reset shadow for label
     ctx.shadowColor = 'transparent'
-    
-    // Symbol emoji
-    ctx.font = '20px Arial'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(symbol, 0, 0)
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
     
     // Label
     if (name) {
@@ -213,8 +247,10 @@ function PlanetMapCanvas({
       ctx.fillStyle = 'white'
       ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'
       ctx.lineWidth = 4
-      ctx.strokeText(name, 0, 25)
-      ctx.fillText(name, 0, 25)
+      ctx.textAlign = 'center'
+      const labelY = image ? 38 : 25  // Further down for larger image
+      ctx.strokeText(name, 0, labelY)
+      ctx.fillText(name, 0, labelY)
     }
     
     ctx.restore()
@@ -250,8 +286,16 @@ function PlanetMapCanvas({
       const coords = parseCoordinates(poi.coordinates)
       if (coords) {
         const { x, y } = latLonToXY(coords.lat, coords.lon, width, height)
-        const symbol = getPOISymbol(poi.type)
-        drawMarker(ctx, x, y, symbol, poi.name, '#ffd60a', scale)
+        const icon = getPOIIcon(poi.type)
+        
+        if (isImageIcon(icon)) {
+          // Use custom image if loaded
+          const image = loadedImages[icon]
+          drawMarker(ctx, x, y, '', poi.name, '#ffd60a', scale, image)
+        } else {
+          // Use emoji fallback
+          drawMarker(ctx, x, y, icon, poi.name, '#ffd60a', scale)
+        }
       }
     })
   }

@@ -4,6 +4,20 @@
 export const POI_ICONS = {
   // Types avec icônes custom
   'Abri': '/icons/abri.png',
+  'Bâtiment abandonné': '/icons/abandonne.png',
+  'Tour de communication holographique': '/icons/tour_com.png',
+  'Tas de déchets': '/icons/dechet.png',
+  'Vaisseau crashé': '/icons/crash_shuttle.png',
+  'Débris': '/icons/debris.png',
+  'Tour de retransmission': '/icons/retransmission.png',
+  'Capsule de sauvetage': '/icons/capsule.png',
+  'Campement mineur': '/icons/campement.png',
+  'Cargo écrasé': '/icons/crash_cargo.png',
+  'Comptoir commercial': '/icons/comptoir.png',
+  'Plaque ancienne': '/icons/plaque.png',
+  'Usine de traitement des déchets': '/icons/usine.png',
+  'Balise': '/icons/balise.png',
+  'Monolithe': '/icons/monolith.png',
   
   // Fallback emoji pour les types sans icône custom
   'default': '📍'

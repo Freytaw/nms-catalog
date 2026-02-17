@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { ZoomIn, ZoomOut, Maximize2, RotateCcw } from 'lucide-react'
-import { getPOIIcon, isImageIcon } from '../config/poiIcons'
+import { getPOIIcon, isImageIcon, BASE_ICON } from '../config/poiIcons'
 
 // Planet colors based on type
 const planetColors = {
@@ -34,10 +34,24 @@ function PlanetMapCanvas({
   const [canvasSize, setCanvasSize] = useState({ width, height })
   const [loadedImages, setLoadedImages] = useState({})
 
-  // Preload POI images
+  // Preload POI and base images
   useEffect(() => {
     const imagesToLoad = {}
     const imagePromises = []
+
+    // Load base icon if we have bases
+    if (bases.length > 0 && !loadedImages[BASE_ICON]) {
+      const img = new Image()
+      const promise = new Promise((resolve, reject) => {
+        img.onload = () => {
+          imagesToLoad[BASE_ICON] = img
+          resolve()
+        }
+        img.onerror = reject
+      })
+      img.src = BASE_ICON
+      imagePromises.push(promise)
+    }
 
     // Collect all unique POI types with image icons
     const poiTypes = new Set(pointsOfInterest.map(poi => poi.type).filter(Boolean))
@@ -62,10 +76,10 @@ function PlanetMapCanvas({
       Promise.all(imagePromises).then(() => {
         setLoadedImages(prev => ({ ...prev, ...imagesToLoad }))
       }).catch(err => {
-        console.error('Error loading POI icons:', err)
+        console.error('Error loading map icons:', err)
       })
     }
-  }, [pointsOfInterest])
+  }, [pointsOfInterest, bases])
 
   useEffect(() => {
     redraw()
@@ -277,7 +291,13 @@ function PlanetMapCanvas({
       const coords = parseCoordinates(base.coordinates)
       if (coords) {
         const { x, y } = latLonToXY(coords.lat, coords.lon, width, height)
-        drawMarker(ctx, x, y, '🏠', base.name, '#00ff88', scale)
+        const baseImage = loadedImages[BASE_ICON]
+        if (baseImage) {
+          drawMarker(ctx, x, y, '', base.name, '#00ff88', scale, baseImage)
+        } else {
+          // Fallback to emoji if image not loaded
+          drawMarker(ctx, x, y, '🏠', base.name, '#00ff88', scale)
+        }
       }
     })
     

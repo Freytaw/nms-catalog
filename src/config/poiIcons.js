@@ -1,4 +1,4 @@
-// Configuration des icônes POI
+// Configuration des icônes pour la carte
 // Ajoute tes nouvelles icônes ici au fur et à mesure
 
 export const POI_ICONS = {
@@ -9,12 +9,14 @@ export const POI_ICONS = {
   'default': '📍'
 }
 
-// Fonction pour obtenir l'icône (chemin image ou emoji)
+export const BASE_ICON = '/icons/base.png'
+
+// Fonction pour obtenir l'icône POI (chemin image ou emoji)
 export function getPOIIcon(type) {
   return POI_ICONS[type] || POI_ICONS.default
 }
 
 // Vérifie si c'est une image (path) ou un emoji
 export function isImageIcon(icon) {
-  return icon.startsWith('/')
+  return icon && icon.startsWith('/')
 }

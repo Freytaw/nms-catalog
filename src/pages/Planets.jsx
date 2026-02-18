@@ -85,7 +85,7 @@ function Planets() {
     
     return sortedSystems.map(systemName => ({
       systemName,
-      planets: grouped[systemName]
+      planets: grouped[systemName].sort((a, b) => a.name.localeCompare(b.name)) // Sort planets alphabetically
     }))
   }
 
@@ -400,74 +400,74 @@ function Planets() {
               </h2>
               <div className="grid grid-3">
                 {systemPlanets.map((planet) => {
-            const images = planet.images || []
-            const mainImage = images[0]
-            
-            return (
-            <div key={planet.id} className="card">
-              {mainImage && (
-                <img 
-                  src={mainImage} 
-                  alt={planet.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    objectFit: 'cover', 
-                    borderRadius: 'var(--radius-md)',
-                    marginBottom: '1rem'
-                  }}
-                />
-              )}
-              <div className="card-header">
-                <Link to={`/planets/${planet.id}`} className="card-title">
-                  {planet.name}
-                </Link>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleEdit(planet)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => handleDelete(planet.id)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <div className="card-content">
-                {planet.systems && (
-                  <p><strong>Système :</strong> {planet.systems.name}</p>
-                )}
-                {planet.type && (
-                  <p><strong>Type :</strong> {planet.type}</p>
-                )}
-                {planet.climate && (
-                  <p><strong>Climat :</strong> {planet.climate}</p>
-                )}
-                {planet.sentinels && (
-                  <p><strong>Sentinelles :</strong> {planet.sentinels}</p>
-                )}
-                {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
-                  <p><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</p>
-                )}
-                {planet.flora_discovered > 0 && (
-                  <p><strong>Flore :</strong> {planet.flora_discovered} espèce(s)</p>
-                )}
-                {planet.minerals_discovered > 0 && (
-                  <p><strong>Minéraux :</strong> {planet.minerals_discovered}</p>
-                )}
-                {planet.notes && (
-                  <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{planet.notes}</p>
-                )}
-              </div>
-            </div>
-          )
-          })}
+                  const images = planet.images || []
+                  const mainImage = images[0]
+                  
+                  return (
+                    <div key={planet.id} className="card">
+                      {mainImage && (
+                        <img 
+                          src={mainImage} 
+                          alt={planet.name}
+                          style={{ 
+                            width: '100%', 
+                            height: '200px', 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '1rem'
+                          }}
+                        />
+                      )}
+                      <div className="card-header">
+                        <Link to={`/planets/${planet.id}`} className="card-title">
+                          {planet.name}
+                        </Link>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            onClick={() => handleEdit(planet)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            onClick={() => handleDelete(planet.id)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="card-content">
+                        {planet.systems && (
+                          <p><strong>Système :</strong> {planet.systems.name}</p>
+                        )}
+                        {planet.type && (
+                          <p><strong>Type :</strong> {planet.type}</p>
+                        )}
+                        {planet.climate && (
+                          <p><strong>Climat :</strong> {planet.climate}</p>
+                        )}
+                        {planet.sentinels && (
+                          <p><strong>Sentinelles :</strong> {planet.sentinels}</p>
+                        )}
+                        {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
+                          <p><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</p>
+                        )}
+                        {planet.flora_discovered > 0 && (
+                          <p><strong>Flore :</strong> {planet.flora_discovered} espèce(s)</p>
+                        )}
+                        {planet.minerals_discovered > 0 && (
+                          <p><strong>Minéraux :</strong> {planet.minerals_discovered}</p>
+                        )}
+                        {planet.notes && (
+                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{planet.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}

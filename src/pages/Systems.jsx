@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Database } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import { logger, dbLogger } from '../utils/logger'
 
 function Systems() {
   const location = useLocation()
@@ -54,6 +55,8 @@ function Systems() {
 
   async function fetchData() {
     try {
+      dbLogger.info('Fetching systems and sectors...')
+      
       const [systemsRes, sectorsRes] = await Promise.all([
         supabase.from('systems').select(`
           *,
@@ -65,9 +68,12 @@ function Systems() {
       if (systemsRes.error) throw systemsRes.error
       if (sectorsRes.error) throw sectorsRes.error
 
+      dbLogger.success(`Loaded ${systemsRes.data?.length || 0} systems and ${sectorsRes.data?.length || 0} sectors`)
+      
       setSystems(systemsRes.data || [])
       setSectors(sectorsRes.data || [])
     } catch (error) {
+      dbLogger.error('Error fetching systems data', error)
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
@@ -91,7 +97,7 @@ function Systems() {
     
     return sortedSectors.map(sectorName => ({
       sectorName,
-      systems: grouped[sectorName]
+      systems: grouped[sectorName].sort((a, b) => a.name.localeCompare(b.name)) // Sort systems alphabetically
     }))
   }
 
@@ -432,97 +438,99 @@ function Systems() {
               </h2>
               <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
                 {sectorSystems.map((system) => {
-            const images = system.images || []
-            const mainImage = images[0] || system.image_url
-            
-            return (
-            <div key={system.id} className="card">
-              {mainImage && (
-                <img 
-                  src={mainImage} 
-                  alt={system.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    objectFit: 'cover', 
-                    borderRadius: 'var(--radius-md)',
-                    marginBottom: '1rem'
-                  }}
-                />
-              )}
-              <div className="card-header">
-                <Link to={`/systems/${system.id}`} className="card-title">
-                  {system.name}
-                </Link>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleEdit(system)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => handleDelete(system.id)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                  const images = system.images || []
+                  const mainImage = images[0] || system.image_url
+                  
+                  return (
+                    <div key={system.id} className="card">
+                      {mainImage && (
+                        <img 
+                          src={mainImage} 
+                          alt={system.name}
+                          style={{ 
+                            width: '100%', 
+                            height: '200px', 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '1rem'
+                          }}
+                        />
+                      )}
+                      <div className="card-header">
+                        <Link to={`/systems/${system.id}`} className="card-title">
+                          {system.name}
+                        </Link>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            onClick={() => handleEdit(system)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            onClick={() => handleDelete(system.id)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="card-content">
+                        {system.sectors && (
+                          <p><strong>Secteur :</strong> {system.sectors.name}</p>
+                        )}
+                        {system.star_class && (
+                          <p><strong>Classe d'étoile :</strong> {system.star_class}</p>
+                        )}
+                        {system.coordinates && (
+                          <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
+                            <strong>Coordonnées :</strong> {system.coordinates}
+                          </p>
+                        )}
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                          {system.planet_count > 0 && (
+                            <span style={{ whiteSpace: 'nowrap' }}><strong>Planètes :</strong> {system.planet_count}</span>
+                          )}
+                          {system.system_type && (
+                            <span style={{ whiteSpace: 'nowrap' }}><strong>Type :</strong> {system.system_type}</span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                          {system.economy && (
+                            <span style={{ whiteSpace: 'nowrap' }}><strong>Économie :</strong> {system.economy}</span>
+                          )}
+                          {system.conflict_level && (
+                            <span style={{ whiteSpace: 'nowrap' }}><strong>Conflit :</strong> {system.conflict_level}</span>
+                          )}
+                          {system.dominant_race && (
+                            <span style={{ whiteSpace: 'nowrap' }}><strong>Race :</strong> {system.dominant_race}</span>
+                          )}
+                        </div>
+                        {(system.interesting_buy || system.interesting_sell) && (
+                          <div style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                            {system.interesting_buy && (
+                              <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📥 Achat :</strong> {system.interesting_buy}</p>
+                            )}
+                            {system.interesting_sell && (
+                              <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📤 Vente :</strong> {system.interesting_sell}</p>
+                            )}
+                          </div>
+                        )}
+                        {system.discovery_date && (
+                          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                            <strong>Découvert le :</strong> {new Date(system.discovery_date).toLocaleDateString('fr-FR')}
+                          </p>
+                        )}
+                        {system.notes && (
+                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)', fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{system.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <div className="card-content">
-                {system.sectors && (
-                  <p><strong>Secteur :</strong> {system.sectors.name}</p>
-                )}
-                {system.star_class && (
-                  <p><strong>Classe d'étoile :</strong> {system.star_class}</p>
-                )}
-                {system.coordinates && (
-                  <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
-                    <strong>Coordonnées :</strong> {system.coordinates}
-                  </p>
-                )}
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                  {system.planet_count > 0 && (
-                    <span style={{ whiteSpace: 'nowrap' }}><strong>Planètes :</strong> {system.planet_count}</span>
-                  )}
-                  {system.system_type && (
-                    <span style={{ whiteSpace: 'nowrap' }}><strong>Type :</strong> {system.system_type}</span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                  {system.economy && (
-                    <span style={{ whiteSpace: 'nowrap' }}><strong>Économie :</strong> {system.economy}</span>
-                  )}
-                  {system.conflict_level && (
-                    <span style={{ whiteSpace: 'nowrap' }}><strong>Conflit :</strong> {system.conflict_level}</span>
-                  )}
-                  {system.dominant_race && (
-                    <span style={{ whiteSpace: 'nowrap' }}><strong>Race :</strong> {system.dominant_race}</span>
-                  )}
-                </div>
-                {(system.interesting_buy || system.interesting_sell) && (
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                    {system.interesting_buy && (
-                      <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📥 Achat :</strong> {system.interesting_buy}</p>
-                    )}
-                    {system.interesting_sell && (
-                      <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📤 Vente :</strong> {system.interesting_sell}</p>
-                    )}
-                  </div>
-                )}
-                {system.discovery_date && (
-                  <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                    <strong>Découvert le :</strong> {new Date(system.discovery_date).toLocaleDateString('fr-FR')}
-                  </p>
-                )}
-                {system.notes && (
-                  <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)', fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{system.notes}</p>
-                )}
-              </div>
-            </div>
-          )})}
             </div>
           ))}
         </div>

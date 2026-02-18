@@ -113,7 +113,7 @@ function Bases() {
     
     return sortedPlanets.map(planetName => ({
       planetName,
-      bases: grouped[planetName]
+      bases: grouped[planetName].sort((a, b) => a.name.localeCompare(b.name)) // Sort bases alphabetically
     }))
   }
 
@@ -369,62 +369,62 @@ function Bases() {
               </h2>
               <div className="grid grid-2">
                 {planetBases.map((base) => {
-            const images = base.images || []
-            const mainImage = images[0]
-            
-            return (
-            <div key={base.id} className="card">
-              {mainImage && (
-                <img 
-                  src={mainImage} 
-                  alt={base.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    objectFit: 'cover', 
-                    borderRadius: 'var(--radius-md)',
-                    marginBottom: '1rem'
-                  }}
-                />
-              )}
-              <div className="card-header">
-                <Link to={`/bases/${base.id}`} className="card-title">
-                  {base.name}
-                </Link>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleEdit(base)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => handleDelete(base.id)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <div className="card-content">
-                {base.planets && (
-                  <p><strong>Planète :</strong> {base.planets.name}</p>
-                )}
-                {base.location_description && (
-                  <p><strong>Localisation :</strong> {base.location_description}</p>
-                )}
-                {base.resources_nearby && (
-                  <p><strong>Ressources :</strong> {base.resources_nearby}</p>
-                )}
-                {base.notes && (
-                  <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{base.notes}</p>
-                )}
-              </div>
-            </div>
-          )
-          })}
+                  const images = base.images || []
+                  const mainImage = images[0]
+                  
+                  return (
+                    <div key={base.id} className="card">
+                      {mainImage && (
+                        <img 
+                          src={mainImage} 
+                          alt={base.name}
+                          style={{ 
+                            width: '100%', 
+                            height: '200px', 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '1rem'
+                          }}
+                        />
+                      )}
+                      <div className="card-header">
+                        <Link to={`/bases/${base.id}`} className="card-title">
+                          {base.name}
+                        </Link>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            onClick={() => handleEdit(base)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            onClick={() => handleDelete(base.id)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="card-content">
+                        {base.planets && (
+                          <p><strong>Planète :</strong> {base.planets.name}</p>
+                        )}
+                        {base.location_description && (
+                          <p><strong>Localisation :</strong> {base.location_description}</p>
+                        )}
+                        {base.resources_nearby && (
+                          <p><strong>Ressources :</strong> {base.resources_nearby}</p>
+                        )}
+                        {base.notes && (
+                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{base.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}

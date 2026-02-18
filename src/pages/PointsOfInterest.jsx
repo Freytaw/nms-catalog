@@ -116,7 +116,7 @@ function PointsOfInterest() {
     
     return sortedPlanets.map(planetName => ({
       planetName,
-      pois: grouped[planetName]
+      pois: grouped[planetName].sort((a, b) => a.name.localeCompare(b.name)) // Sort POIs alphabetically
     }))
   }
 
@@ -368,59 +368,59 @@ function PointsOfInterest() {
               </h2>
               <div className="grid grid-3">
                 {planetPOIs.map((poi) => {
-            const images = poi.images || []
-            const mainImage = images[0]
-            
-            return (
-              <div key={poi.id} className="card">
-                {mainImage && (
-                  <img 
-                    src={mainImage} 
-                    alt={poi.name}
-                    style={{ 
-                      width: '100%', 
-                      height: '200px', 
-                      objectFit: 'cover', 
-                      borderRadius: 'var(--radius-md)',
-                      marginBottom: '1rem'
-                    }}
-                  />
-                )}
-                <div className="card-header">
-                  <Link to={`/points-of-interest/${poi.id}`} className="card-title">
-                    {poi.name}
-                  </Link>
-                  <div className="card-actions">
-                    <button 
-                      className="btn-icon"
-                      onClick={() => handleEdit(poi)}
-                      title="Modifier"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      className="btn-icon"
-                      onClick={() => handleDelete(poi.id)}
-                      title="Supprimer"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-                <div className="card-content">
-                  {poi.type && <p><strong>Type:</strong> {poi.type}</p>}
-                  {poi.planets && (
-                    <p>
-                      <strong>Planète:</strong> {poi.planets.name}
-                      {poi.planets.systems && poi.planets.systems.name && (
-                        <> • {poi.planets.systems.name}</>
+                  const images = poi.images || []
+                  const mainImage = images[0]
+                  
+                  return (
+                    <div key={poi.id} className="card">
+                      {mainImage && (
+                        <img 
+                          src={mainImage} 
+                          alt={poi.name}
+                          style={{ 
+                            width: '100%', 
+                            height: '200px', 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '1rem'
+                          }}
+                        />
                       )}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                      <div className="card-header">
+                        <Link to={`/points-of-interest/${poi.id}`} className="card-title">
+                          {poi.name}
+                        </Link>
+                        <div className="card-actions">
+                          <button 
+                            className="btn-icon"
+                            onClick={() => handleEdit(poi)}
+                            title="Modifier"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button 
+                            className="btn-icon"
+                            onClick={() => handleDelete(poi.id)}
+                            title="Supprimer"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="card-content">
+                        {poi.type && <p><strong>Type:</strong> {poi.type}</p>}
+                        {poi.planets && (
+                          <p>
+                            <strong>Planète:</strong> {poi.planets.name}
+                            {poi.planets.systems && poi.planets.systems.name && (
+                              <> • {poi.planets.systems.name}</>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}

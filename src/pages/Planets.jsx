@@ -68,6 +68,27 @@ function Planets() {
     }
   }
 
+  // Group planets by system and sort alphabetically
+  function getPlanetsBySystem() {
+    const grouped = {}
+    
+    planets.forEach(planet => {
+      const systemName = planet.systems?.name || 'Système Inconnu'
+      if (!grouped[systemName]) {
+        grouped[systemName] = []
+      }
+      grouped[systemName].push(planet)
+    })
+    
+    // Sort system names alphabetically
+    const sortedSystems = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+    
+    return sortedSystems.map(systemName => ({
+      systemName,
+      planets: grouped[systemName]
+    }))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     
@@ -365,8 +386,20 @@ function Planets() {
           <p>Commence par créer ta première planète !</p>
         </div>
       ) : (
-        <div className="grid grid-3">
-          {planets.map((planet) => {
+        <div>
+          {getPlanetsBySystem().map(({ systemName, planets: systemPlanets }) => (
+            <div key={systemName} style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                color: 'var(--nms-primary)', 
+                marginBottom: '1rem',
+                fontSize: '1.5rem',
+                borderBottom: '2px solid var(--nms-primary)',
+                paddingBottom: '0.5rem'
+              }}>
+                {systemName}
+              </h2>
+              <div className="grid grid-3">
+                {systemPlanets.map((planet) => {
             const images = planet.images || []
             const mainImage = images[0]
             
@@ -435,6 +468,9 @@ function Planets() {
             </div>
           )
           })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -99,6 +99,27 @@ function PointsOfInterest() {
     }
   }
 
+  // Group POI by planet and sort alphabetically
+  function getPOIByPlanet() {
+    const grouped = {}
+    
+    pointsOfInterest.forEach(poi => {
+      const planetName = poi.planets?.name || 'Planète Inconnue'
+      if (!grouped[planetName]) {
+        grouped[planetName] = []
+      }
+      grouped[planetName].push(poi)
+    })
+    
+    // Sort planet names alphabetically
+    const sortedPlanets = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+    
+    return sortedPlanets.map(planetName => ({
+      planetName,
+      pois: grouped[planetName]
+    }))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     
@@ -333,8 +354,20 @@ function PointsOfInterest() {
           <p>Aucun point d'intérêt enregistré</p>
         </div>
       ) : (
-        <div className="grid grid-3">
-          {pointsOfInterest.map((poi) => {
+        <div>
+          {getPOIByPlanet().map(({ planetName, pois: planetPOIs }) => (
+            <div key={planetName} style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                color: 'var(--nms-primary)', 
+                marginBottom: '1rem',
+                fontSize: '1.5rem',
+                borderBottom: '2px solid var(--nms-primary)',
+                paddingBottom: '0.5rem'
+              }}>
+                {planetName}
+              </h2>
+              <div className="grid grid-3">
+                {planetPOIs.map((poi) => {
             const images = poi.images || []
             const mainImage = images[0]
             
@@ -388,6 +421,9 @@ function PointsOfInterest() {
               </div>
             )
           })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

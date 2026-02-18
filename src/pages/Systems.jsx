@@ -58,7 +58,7 @@ function Systems() {
         supabase.from('systems').select(`
           *,
           sectors (name)
-        `).order('discovery_date', { ascending: false }),
+        `).order('name'),  // Order systems by name
         supabase.from('sectors').select('*').order('name')
       ])
 
@@ -72,6 +72,27 @@ function Systems() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Group systems by sector and sort alphabetically
+  function getSystemsBySector() {
+    const grouped = {}
+    
+    systems.forEach(system => {
+      const sectorName = system.sectors?.name || 'Secteur Inconnu'
+      if (!grouped[sectorName]) {
+        grouped[sectorName] = []
+      }
+      grouped[sectorName].push(system)
+    })
+    
+    // Sort sector names alphabetically
+    const sortedSectors = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+    
+    return sortedSectors.map(sectorName => ({
+      sectorName,
+      systems: grouped[sectorName]
+    }))
   }
 
   async function handleSubmit(e) {
@@ -397,8 +418,20 @@ function Systems() {
           <p>Commence par créer ton premier système !</p>
         </div>
       ) : (
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
-          {systems.map((system) => {
+        <div>
+          {getSystemsBySector().map(({ sectorName, systems: sectorSystems }) => (
+            <div key={sectorName} style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                color: 'var(--nms-primary)', 
+                marginBottom: '1rem',
+                fontSize: '1.5rem',
+                borderBottom: '2px solid var(--nms-primary)',
+                paddingBottom: '0.5rem'
+              }}>
+                {sectorName}
+              </h2>
+              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+                {sectorSystems.map((system) => {
             const images = system.images || []
             const mainImage = images[0] || system.image_url
             
@@ -490,6 +523,8 @@ function Systems() {
               </div>
             </div>
           )})}
+            </div>
+          ))}
         </div>
       )}
     </div>

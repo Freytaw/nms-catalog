@@ -25,23 +25,23 @@ export const POI_ICONS = {
 
 export const BASE_ICON = '/icons/base.png'
 
-// Liste des types POI prédéfinis (pour datalist)
+// Liste des types POI prédéfinis (pour datalist) - Ordre alphabétique
 export const POI_TYPES = [
   'Abri',
-  'Bâtiment abandonné',
-  'Tour de communication holographique',
-  'Tas de déchets',
-  'Vaisseau écrasé',
-  'Débris',
-  'Tour de retransmission',
-  'Capsule de sauvetage',
-  'Campement mineur',
-  'Vaisseau cargo écrasé',
-  'Comptoir commercial',
-  'Plaque ancienne',
-  'Usine de traitement des déchets',
   'Balise',
-  'Monilithe'
+  'Bâtiment abandonné',
+  'Campement mineur',
+  'Capsule de sauvetage',
+  'Comptoir commercial',
+  'Débris',
+  'Monilithe',
+  'Plaque ancienne',
+  'Tas de déchets',
+  'Tour de communication holographique',
+  'Tour de retransmission',
+  'Usine de traitement des déchets',
+  'Vaisseau cargo écrasé',
+  'Vaisseau écrasé'
 ]
 
 // Fonction pour obtenir l'icône POI (chemin image ou emoji)

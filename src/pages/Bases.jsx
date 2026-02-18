@@ -96,6 +96,27 @@ function Bases() {
     }
   }
 
+  // Group bases by planet and sort alphabetically
+  function getBasesByPlanet() {
+    const grouped = {}
+    
+    bases.forEach(base => {
+      const planetName = base.planets?.name || 'Planète Inconnue'
+      if (!grouped[planetName]) {
+        grouped[planetName] = []
+      }
+      grouped[planetName].push(base)
+    })
+    
+    // Sort planet names alphabetically
+    const sortedPlanets = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+    
+    return sortedPlanets.map(planetName => ({
+      planetName,
+      bases: grouped[planetName]
+    }))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     
@@ -334,8 +355,20 @@ function Bases() {
           <p>Commence par créer ta première base !</p>
         </div>
       ) : (
-        <div className="grid grid-2">
-          {bases.map((base) => {
+        <div>
+          {getBasesByPlanet().map(({ planetName, bases: planetBases }) => (
+            <div key={planetName} style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                color: 'var(--nms-primary)', 
+                marginBottom: '1rem',
+                fontSize: '1.5rem',
+                borderBottom: '2px solid var(--nms-primary)',
+                paddingBottom: '0.5rem'
+              }}>
+                {planetName}
+              </h2>
+              <div className="grid grid-2">
+                {planetBases.map((base) => {
             const images = base.images || []
             const mainImage = images[0]
             
@@ -392,6 +425,9 @@ function Bases() {
             </div>
           )
           })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

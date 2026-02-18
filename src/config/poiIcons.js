@@ -7,23 +7,42 @@ export const POI_ICONS = {
   'Bâtiment abandonné': '/icons/abandonne.png',
   'Tour de communication holographique': '/icons/tour_com.png',
   'Tas de déchets': '/icons/dechet.png',
-  'Vaisseau crashé': '/icons/crash_shuttle.png',
+  'Vaisseau écrasé': '/icons/crash_shuttle.png',
   'Débris': '/icons/debris.png',
   'Tour de retransmission': '/icons/retransmission.png',
   'Capsule de sauvetage': '/icons/capsule.png',
   'Campement mineur': '/icons/campement.png',
-  'Cargo écrasé': '/icons/crash_cargo.png',
+  'Vaisseau cargo écrasé': '/icons/crash_cargo.png',
   'Comptoir commercial': '/icons/comptoir.png',
   'Plaque ancienne': '/icons/plaque.png',
   'Usine de traitement des déchets': '/icons/usine.png',
   'Balise': '/icons/balise.png',
-  'Monolithe': '/icons/monolith.png',
+  'Monilithe': '/icons/monolith.png',
   
   // Fallback emoji pour les types sans icône custom
   'default': '📍'
 }
 
 export const BASE_ICON = '/icons/base.png'
+
+// Liste des types POI prédéfinis (pour datalist)
+export const POI_TYPES = [
+  'Abri',
+  'Bâtiment abandonné',
+  'Tour de communication holographique',
+  'Tas de déchets',
+  'Vaisseau écrasé',
+  'Débris',
+  'Tour de retransmission',
+  'Capsule de sauvetage',
+  'Campement mineur',
+  'Vaisseau cargo écrasé',
+  'Comptoir commercial',
+  'Plaque ancienne',
+  'Usine de traitement des déchets',
+  'Balise',
+  'Monilithe'
+]
 
 // Fonction pour obtenir l'icône POI (chemin image ou emoji)
 export function getPOIIcon(type) {

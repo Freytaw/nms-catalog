@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, MapPin } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import { POI_TYPES } from '../config/poiIcons'
 
 function PointsOfInterest() {
   const location = useLocation()
@@ -257,10 +258,16 @@ function PointsOfInterest() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Ex: Ruines, Monument, Épave, Site archéologique"
+                placeholder="Choisissez un type ou saisissez-en un nouveau"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                list="poi-types-list"
               />
+              <datalist id="poi-types-list">
+                {POI_TYPES.map(type => (
+                  <option key={type} value={type} />
+                ))}
+              </datalist>
             </div>
 
             <div className="form-group">

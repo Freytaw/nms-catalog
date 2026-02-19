@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Database } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 import { logger, dbLogger } from '../utils/logger'
 
 function Systems() {
@@ -17,6 +19,18 @@ function Systems() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSystem, setEditingSystem] = useState(null)
+  
+  // Filters
+  const [filterSectorName, setFilterSectorName] = useState('')
+  const [filterSystemName, setFilterSystemName] = useState('')
+  const [filterStarClass, setFilterStarClass] = useState('all')
+  const [filterSystemType, setFilterSystemType] = useState('all')
+  const [filterRace, setFilterRace] = useState('all')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  
   const [formData, setFormData] = useState({
     sector_id: UNKNOWN_SECTOR_ID,
     name: '',
@@ -80,11 +94,51 @@ function Systems() {
     }
   }
 
-  // Group systems by sector and sort alphabetically
+  // Get unique values for filter dropdowns
+  const uniqueStarClasses = [...new Set(systems.map(s => s.star_class).filter(Boolean))]
+  const uniqueSystemTypes = [...new Set(systems.map(s => s.system_type).filter(Boolean))]
+  const uniqueRaces = [...new Set(systems.map(s => s.dominant_race).filter(Boolean))]
+
+  // Apply filters
+  function getFilteredSystems() {
+    return systems.filter(system => {
+      // Filter by sector name
+      if (filterSectorName && 
+          !system.sectors?.name?.toLowerCase().includes(filterSectorName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by system name
+      if (filterSystemName && 
+          !system.name.toLowerCase().includes(filterSystemName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by star class
+      if (filterStarClass !== 'all' && system.star_class !== filterStarClass) {
+        return false
+      }
+      
+      // Filter by system type
+      if (filterSystemType !== 'all' && system.system_type !== filterSystemType) {
+        return false
+      }
+      
+      // Filter by race
+      if (filterRace !== 'all' && system.dominant_race !== filterRace) {
+        return false
+      }
+      
+      return true
+    })
+  }
+
+  // Group systems by sector and sort alphabetically with pagination
   function getSystemsBySector() {
+    const filtered = getFilteredSystems()
     const grouped = {}
     
-    systems.forEach(system => {
+    filtered.forEach(system => {
       const sectorName = system.sectors?.name || 'Secteur Inconnu'
       if (!grouped[sectorName]) {
         grouped[sectorName] = []
@@ -92,14 +146,58 @@ function Systems() {
       grouped[sectorName].push(system)
     })
     
-    // Sort sector names alphabetically
     const sortedSectors = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
     
-    return sortedSectors.map(sectorName => ({
-      sectorName,
-      systems: grouped[sectorName].sort((a, b) => a.name.localeCompare(b.name)) // Sort systems alphabetically
-    }))
+    // Flatten for pagination
+    const allSystems = sortedSectors.flatMap(sectorName => 
+      grouped[sectorName].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedSystems = allSystems.slice(startIndex, endIndex)
+    
+    // Regroup paginated systems
+    const paginatedGrouped = {}
+    paginatedSystems.forEach(system => {
+      const sectorName = system.sectors?.name || 'Secteur Inconnu'
+      if (!paginatedGrouped[sectorName]) {
+        paginatedGrouped[sectorName] = []
+      }
+      paginatedGrouped[sectorName].push(system)
+    })
+    
+    return {
+      groups: Object.keys(paginatedGrouped).sort((a, b) => a.localeCompare(b)).map(sectorName => ({
+        sectorName,
+        systems: paginatedGrouped[sectorName]
+      })),
+      totalCount: filtered.length
+    }
   }
+
+  function resetFilters() {
+    setFilterSectorName('')
+    setFilterSystemName('')
+    setFilterStarClass('all')
+    setFilterSystemType('all')
+    setFilterRace('all')
+    setCurrentPage(1)
+  }
+
+  function handlePageChange(page) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleItemsPerPageChange(count) {
+    setItemsPerPage(count)
+    setCurrentPage(1)
+  }
+
+  const { groups, totalCount } = getSystemsBySector()
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -417,123 +515,204 @@ function Systems() {
         </div>
       )}
 
+      {/* Filters */}
+      {!showForm && systems.length > 0 && (
+        <FilterBar
+          filters={[
+            {
+              type: 'text',
+              name: 'sectorName',
+              label: 'Nom du secteur',
+              value: filterSectorName,
+              onChange: (value) => {
+                setFilterSectorName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'systemName',
+              label: 'Nom du système',
+              value: filterSystemName,
+              onChange: (value) => {
+                setFilterSystemName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'select',
+              name: 'starClass',
+              label: 'Classe d\'étoile',
+              value: filterStarClass,
+              onChange: (value) => {
+                setFilterStarClass(value)
+                setCurrentPage(1)
+              },
+              options: uniqueStarClasses.sort()
+            },
+            {
+              type: 'select',
+              name: 'systemType',
+              label: 'Type de système',
+              value: filterSystemType,
+              onChange: (value) => {
+                setFilterSystemType(value)
+                setCurrentPage(1)
+              },
+              options: uniqueSystemTypes.sort()
+            },
+            {
+              type: 'select',
+              name: 'race',
+              label: 'Race dominante',
+              value: filterRace,
+              onChange: (value) => {
+                setFilterRace(value)
+                setCurrentPage(1)
+              },
+              options: uniqueRaces.sort()
+            }
+          ]}
+          onReset={resetFilters}
+          resultCount={totalCount}
+        />
+      )}
+
       {systems.length === 0 ? (
         <div className="empty-state">
           <Database size={64} />
           <p>Aucun système enregistré</p>
           <p>Commence par créer ton premier système !</p>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="empty-state">
+          <Database size={64} />
+          <p>Aucun résultat</p>
+          <p>Modifie tes filtres pour voir des systèmes</p>
+        </div>
       ) : (
-        <div>
-          {getSystemsBySector().map(({ sectorName, systems: sectorSystems }) => (
-            <div key={sectorName} style={{ marginBottom: '2rem' }}>
-              <h2 style={{ 
-                color: 'var(--nms-primary)', 
-                marginBottom: '1rem',
-                fontSize: '1.5rem',
-                borderBottom: '2px solid var(--nms-primary)',
-                paddingBottom: '0.5rem'
-              }}>
-                {sectorName}
-              </h2>
-              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
-                {sectorSystems.map((system) => {
-                  const images = system.images || []
-                  const mainImage = images[0] || system.image_url
-                  
-                  return (
-                    <div key={system.id} className="card">
-                      {mainImage && (
-                        <img 
-                          src={mainImage} 
-                          alt={system.name}
-                          style={{ 
-                            width: '100%', 
-                            height: '200px', 
-                            objectFit: 'cover', 
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                          }}
-                        />
-                      )}
-                      <div className="card-header">
-                        <Link to={`/systems/${system.id}`} className="card-title">
-                          {system.name}
-                        </Link>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button 
-                            className="btn btn-secondary" 
-                            onClick={() => handleEdit(system)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="btn btn-danger" 
-                            onClick={() => handleDelete(system.id)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="card-content">
-                        {system.sectors && (
-                          <p><strong>Secteur :</strong> {system.sectors.name}</p>
+        <>
+          <div>
+            {groups.map(({ sectorName, systems: sectorSystems }) => (
+              <div key={sectorName} style={{ marginBottom: '2rem' }}>
+                <h2 style={{ 
+                  color: 'var(--nms-primary)', 
+                  marginBottom: '1rem',
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid var(--nms-primary)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  {sectorName}
+                </h2>
+                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+                  {sectorSystems.map((system) => {
+                    const images = system.images || []
+                    const mainImage = images[0] || system.image_url
+                    
+                    return (
+                      <div key={system.id} className="card">
+                        {mainImage && (
+                          <img 
+                            src={mainImage} 
+                            alt={system.name}
+                            style={{ 
+                              width: '100%', 
+                              height: '200px', 
+                              objectFit: 'cover', 
+                              borderRadius: 'var(--radius-md)',
+                              marginBottom: '1rem'
+                            }}
+                          />
                         )}
-                        {system.star_class && (
-                          <p><strong>Classe d'étoile :</strong> {system.star_class}</p>
-                        )}
-                        {system.coordinates && (
-                          <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
-                            <strong>Coordonnées :</strong> {system.coordinates}
-                          </p>
-                        )}
-                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                          {system.planet_count > 0 && (
-                            <span style={{ whiteSpace: 'nowrap' }}><strong>Planètes :</strong> {system.planet_count}</span>
-                          )}
-                          {system.system_type && (
-                            <span style={{ whiteSpace: 'nowrap' }}><strong>Type :</strong> {system.system_type}</span>
-                          )}
+                        <div className="card-header">
+                          <Link to={`/systems/${system.id}`} className="card-title">
+                            {system.name}
+                          </Link>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              className="btn btn-secondary" 
+                              onClick={() => handleEdit(system)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="btn btn-danger" 
+                              onClick={() => handleDelete(system.id)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                          {system.economy && (
-                            <span style={{ whiteSpace: 'nowrap' }}><strong>Économie :</strong> {system.economy}</span>
+                        <div className="card-content">
+                          {system.sectors && (
+                            <p><strong>Secteur :</strong> {system.sectors.name}</p>
                           )}
-                          {system.conflict_level && (
-                            <span style={{ whiteSpace: 'nowrap' }}><strong>Conflit :</strong> {system.conflict_level}</span>
+                          {system.star_class && (
+                            <p><strong>Classe d'étoile :</strong> {system.star_class}</p>
                           )}
-                          {system.dominant_race && (
-                            <span style={{ whiteSpace: 'nowrap' }}><strong>Race :</strong> {system.dominant_race}</span>
+                          {system.coordinates && (
+                            <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}>
+                              <strong>Coordonnées :</strong> {system.coordinates}
+                            </p>
                           )}
-                        </div>
-                        {(system.interesting_buy || system.interesting_sell) && (
-                          <div style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                            {system.interesting_buy && (
-                              <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📥 Achat :</strong> {system.interesting_buy}</p>
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                            {system.planet_count > 0 && (
+                              <span style={{ whiteSpace: 'nowrap' }}><strong>Planètes :</strong> {system.planet_count}</span>
                             )}
-                            {system.interesting_sell && (
-                              <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📤 Vente :</strong> {system.interesting_sell}</p>
+                            {system.system_type && (
+                              <span style={{ whiteSpace: 'nowrap' }}><strong>Type :</strong> {system.system_type}</span>
                             )}
                           </div>
-                        )}
-                        {system.discovery_date && (
-                          <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                            <strong>Découvert le :</strong> {new Date(system.discovery_date).toLocaleDateString('fr-FR')}
-                          </p>
-                        )}
-                        {system.notes && (
-                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)', fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{system.notes}</p>
-                        )}
+                          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                            {system.economy && (
+                              <span style={{ whiteSpace: 'nowrap' }}><strong>Économie :</strong> {system.economy}</span>
+                            )}
+                            {system.conflict_level && (
+                              <span style={{ whiteSpace: 'nowrap' }}><strong>Conflit :</strong> {system.conflict_level}</span>
+                            )}
+                            {system.dominant_race && (
+                              <span style={{ whiteSpace: 'nowrap' }}><strong>Race :</strong> {system.dominant_race}</span>
+                            )}
+                          </div>
+                          {(system.interesting_buy || system.interesting_sell) && (
+                            <div style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                              {system.interesting_buy && (
+                                <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📥 Achat :</strong> {system.interesting_buy}</p>
+                              )}
+                              {system.interesting_sell && (
+                                <p style={{ whiteSpace: 'nowrap', overflow: 'visible' }}><strong>📤 Vente :</strong> {system.interesting_sell}</p>
+                              )}
+                            </div>
+                          )}
+                          {system.discovery_date && (
+                            <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                              <strong>Découvert le :</strong> {new Date(system.discovery_date).toLocaleDateString('fr-FR')}
+                            </p>
+                          )}
+                          {system.notes && (
+                            <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)', fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>{system.notes}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </>
       )}
     </div>
   )

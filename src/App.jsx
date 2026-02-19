@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom'
-import { Rocket, Globe, Database, Map, Home, MapPin, Users, Building } from 'lucide-react'
+import { Rocket, Globe, Database, Map, Home, MapPin, Users, Building, FileText } from 'lucide-react'
 import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
 import Sectors from './pages/Sectors'
@@ -9,6 +9,7 @@ import Planets from './pages/Planets'
 import Creatures from './pages/Creatures'
 import Bases from './pages/Bases'
 import PointsOfInterest from './pages/PointsOfInterest'
+import Logs from './pages/Logs'
 import { SectorDetail, SystemDetail, PlanetDetail, CreatureDetail, BaseDetail, PointOfInterestDetail } from './pages/DetailPages'
 import './index.css'
 
@@ -66,6 +67,12 @@ function App() {
                     Points d'Intérêt
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink to="/logs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                    <FileText size={18} />
+                    Logs
+                  </NavLink>
+                </li>
               </ul>
             </div>
           </nav>
@@ -85,6 +92,7 @@ function App() {
               <Route path="/bases/:id" element={<BaseDetail />} />
               <Route path="/points-of-interest" element={<PointsOfInterest />} />
               <Route path="/points-of-interest/:id" element={<PointOfInterestDetail />} />
+              <Route path="/logs" element={<Logs />} />
             </Routes>
           </main>
         </div>

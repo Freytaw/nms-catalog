@@ -1,4 +1,7 @@
 // Simple logging utility with colored console output
+// Warnings and errors are automatically saved to Supabase
+
+import { supabase } from '../supabaseClient'
 
 const LOG_LEVELS = {
   INFO: { emoji: 'ℹ️', color: '#00d9ff', label: 'INFO' },
@@ -31,6 +34,31 @@ class Logger {
     }
   }
 
+  async _saveToSupabase(level, message, data = null) {
+    try {
+      const logEntry = {
+        level: level.toLowerCase(),
+        context: this.context,
+        message,
+        data: data ? JSON.parse(JSON.stringify(data)) : null, // Serialize data
+        user_agent: navigator?.userAgent || null,
+        url: window?.location?.href || null,
+        timestamp: new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('logs')
+        .insert(logEntry)
+
+      if (error) {
+        console.error('Failed to save log to database:', error)
+      }
+    } catch (err) {
+      // Silently fail - don't crash the app if logging fails
+      console.error('Error saving log:', err)
+    }
+  }
+
   info(message, data) {
     this._log('INFO', message, data)
   }
@@ -41,10 +69,14 @@ class Logger {
 
   warning(message, data) {
     this._log('WARNING', message, data)
+    // Save to Supabase asynchronously
+    this._saveToSupabase('WARNING', message, data)
   }
 
   error(message, data) {
     this._log('ERROR', message, data)
+    // Save to Supabase asynchronously
+    this._saveToSupabase('ERROR', message, data)
     
     // In production, you could send to error tracking service here
     if (this.isProduction) {

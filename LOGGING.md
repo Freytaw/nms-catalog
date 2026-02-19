@@ -2,7 +2,50 @@
 
 ## Vue d'ensemble
 
-Le catalogue utilise un système de logs simple avec des couleurs pour faciliter le débogage.
+Le catalogue utilise un système de logs double :
+- **Console** : Logs colorés pour le développement
+- **Supabase** : Stockage automatique des warnings et errors dans la base de données
+
+## ⚠️ Logs persistants (Supabase)
+
+### Logs sauvegardés automatiquement
+
+**Seuls les warnings et errors sont enregistrés dans Supabase.**
+
+Les logs INFO, SUCCESS et DEBUG restent uniquement dans la console.
+
+### Structure de la table `logs`
+
+```sql
+CREATE TABLE logs (
+  id UUID PRIMARY KEY,
+  timestamp TIMESTAMPTZ,
+  level TEXT,              -- 'warning' ou 'error'
+  context TEXT,            -- 'App', 'Database', 'API'
+  message TEXT,
+  data JSONB,             -- Données additionnelles
+  user_agent TEXT,
+  url TEXT,               -- URL de la page
+  created_at TIMESTAMPTZ
+)
+```
+
+### Migration SQL
+
+Exécute cette migration dans Supabase :
+```bash
+/sql/migration_add_logs_table.sql
+```
+
+### Visualisation des logs
+
+**Interface web :** Accède à `/logs` dans l'application pour voir l'historique des warnings/errors avec :
+- 🔍 Filtres par niveau et contexte
+- 📅 Tri chronologique
+- 📊 Détails techniques repliables
+- 🔄 Actualisation en temps réel
+
+**Supabase Dashboard :** Accède directement à la table `logs` pour des requêtes SQL personnalisées.
 
 ## Utilisation
 
@@ -73,6 +116,45 @@ apiLogger.apiCall('GET', '/api/systems', params)
 ```
 
 ## Exemples d'intégration
+
+### Warning enregistré dans Supabase
+```javascript
+import { logger } from '../utils/logger'
+
+// Warning : Enregistré dans console + Supabase
+logger.warning('Image trop grande, compression appliquée', { 
+  originalSize: 5000000,
+  compressedSize: 800000 
+})
+```
+
+### Error enregistré dans Supabase
+```javascript
+import { dbLogger } from '../utils/logger'
+
+try {
+  const res = await supabase.from('systems').insert(data)
+  if (res.error) throw res.error
+} catch (error) {
+  // Error : Enregistré dans console + Supabase
+  dbLogger.error('Failed to insert system', {
+    errorMessage: error.message,
+    errorCode: error.code,
+    data: data
+  })
+}
+```
+
+### Info/Success : Console uniquement
+```javascript
+import { logger } from '../utils/logger'
+
+// Info : Console uniquement (pas dans Supabase)
+logger.info('Fetching data...')
+
+// Success : Console uniquement (pas dans Supabase)
+logger.success('Data loaded successfully', { count: 5 })
+```
 
 ### Page avec chargement de données
 ```javascript
@@ -145,11 +227,74 @@ Data: [...]
 
 ## Bonnes pratiques
 
-1. ✅ Utilisez `info` pour les actions importantes
-2. ✅ Utilisez `success` pour confirmer les opérations
-3. ✅ Utilisez `warning` pour les situations non critiques
-4. ✅ Utilisez `error` pour toutes les erreurs
-5. ✅ Utilisez `debug` pour le développement uniquement
+1. ✅ Utilisez `info` pour les actions importantes (console uniquement)
+2. ✅ Utilisez `success` pour confirmer les opérations (console uniquement)
+3. ✅ Utilisez `warning` pour les situations non critiques (**enregistré dans Supabase**)
+4. ✅ Utilisez `error` pour toutes les erreurs (**enregistré dans Supabase**)
+5. ✅ Utilisez `debug` pour le développement uniquement (console uniquement)
 6. ✅ Incluez les données pertinentes dans le deuxième paramètre
 7. ❌ N'abusez pas des logs (pollution de la console)
 8. ❌ Ne loggez jamais de données sensibles (mots de passe, tokens)
+
+## Nettoyage des logs
+
+### Supprimer les logs anciens (SQL)
+
+```sql
+-- Supprimer les logs de plus de 30 jours
+DELETE FROM logs 
+WHERE timestamp < NOW() - INTERVAL '30 days';
+
+-- Supprimer les warnings de plus de 7 jours
+DELETE FROM logs 
+WHERE level = 'warning' 
+AND timestamp < NOW() - INTERVAL '7 days';
+
+-- Garder seulement les 1000 derniers logs
+DELETE FROM logs 
+WHERE id NOT IN (
+  SELECT id FROM logs 
+  ORDER BY timestamp DESC 
+  LIMIT 1000
+);
+```
+
+### Automatisation (Supabase Edge Function)
+
+Tu peux créer une Edge Function Supabase qui s'exécute quotidiennement pour nettoyer automatiquement les vieux logs.
+
+## Requêtes SQL utiles
+
+### Logs par niveau
+```sql
+SELECT level, COUNT(*) as count
+FROM logs
+GROUP BY level
+ORDER BY count DESC;
+```
+
+### Errors les plus fréquents
+```sql
+SELECT message, COUNT(*) as occurrences
+FROM logs
+WHERE level = 'error'
+GROUP BY message
+ORDER BY occurrences DESC
+LIMIT 10;
+```
+
+### Logs des dernières 24h
+```sql
+SELECT *
+FROM logs
+WHERE timestamp > NOW() - INTERVAL '24 hours'
+ORDER BY timestamp DESC;
+```
+
+### Logs par contexte
+```sql
+SELECT context, level, COUNT(*) as count
+FROM logs
+GROUP BY context, level
+ORDER BY count DESC;
+```

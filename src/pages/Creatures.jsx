@@ -66,6 +66,26 @@ function Creatures() {
     }
   }
 
+  function getCreaturesByPlanet() {
+    const grouped = {}
+    
+    creatures.forEach(creature => {
+      const planetName = creature.planets?.name || 'Planète Inconnue'
+      if (!grouped[planetName]) {
+        grouped[planetName] = []
+      }
+      grouped[planetName].push(creature)
+    })
+    
+    // Sort planet names alphabetically
+    const sortedPlanets = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+    
+    return sortedPlanets.map(planetName => ({
+      planetName,
+      creatures: grouped[planetName].sort((a, b) => a.name.localeCompare(b.name)) // Sort creatures alphabetically
+    }))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     
@@ -341,72 +361,87 @@ function Creatures() {
           <p>Commence par créer ta première créature !</p>
         </div>
       ) : (
-        <div className="grid grid-3">
-          {creatures.map((creature) => {
-            const images = creature.images || []
-            const mainImage = images[0]
-            
-            return (
-            <div key={creature.id} className="card">
-              {mainImage && (
-                <img 
-                  src={mainImage} 
-                  alt={creature.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    objectFit: 'cover', 
-                    borderRadius: 'var(--radius-md)',
-                    marginBottom: '1rem'
-                  }}
-                />
-              )}
-              <div className="card-header">
-                <Link to={`/creatures/${creature.id}`} className="card-title">
-                  {creature.name}
-                </Link>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={() => handleEdit(creature)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => handleDelete(creature.id)}
-                    style={{ padding: '0.5rem' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <div className="card-content">
-                {creature.original_name && (
-                  <p style={{ fontSize: '0.875rem', color: 'var(--nms-gray)' }}>
-                    ({creature.original_name})
-                  </p>
-                )}
-                {creature.planets && (
-                  <p><strong>Planète :</strong> {creature.planets.name}</p>
-                )}
-                {creature.genus && (
-                  <p><strong>Genre :</strong> {creature.genus}</p>
-                )}
-                {creature.height && creature.weight && (
-                  <p><strong>Taille/Poids :</strong> {creature.height} / {creature.weight}</p>
-                )}
-                {creature.special_abilities && (
-                  <p><strong>Capacités :</strong> {creature.special_abilities}</p>
-                )}
-                {creature.notes && (
-                  <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{creature.notes}</p>
-                )}
+        <div>
+          {getCreaturesByPlanet().map(({ planetName, creatures: planetCreatures }) => (
+            <div key={planetName} style={{ marginBottom: '2rem' }}>
+              <h2 style={{ 
+                color: 'var(--nms-primary)', 
+                marginBottom: '1rem',
+                fontSize: '1.5rem',
+                borderBottom: '2px solid var(--nms-primary)',
+                paddingBottom: '0.5rem'
+              }}>
+                {planetName}
+              </h2>
+              <div className="grid grid-3">
+                {planetCreatures.map((creature) => {
+                  const images = creature.images || []
+                  const mainImage = images[0]
+                  
+                  return (
+                    <div key={creature.id} className="card">
+                      {mainImage && (
+                        <img 
+                          src={mainImage} 
+                          alt={creature.name}
+                          style={{ 
+                            width: '100%', 
+                            height: '200px', 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--radius-md)',
+                            marginBottom: '1rem'
+                          }}
+                        />
+                      )}
+                      <div className="card-header">
+                        <Link to={`/creatures/${creature.id}`} className="card-title">
+                          {creature.name}
+                        </Link>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            onClick={() => handleEdit(creature)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            onClick={() => handleDelete(creature.id)}
+                            style={{ padding: '0.5rem' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="card-content">
+                        {creature.original_name && (
+                          <p style={{ fontSize: '0.875rem', color: 'var(--nms-gray)' }}>
+                            ({creature.original_name})
+                          </p>
+                        )}
+                        {creature.planets && (
+                          <p><strong>Planète :</strong> {creature.planets.name}</p>
+                        )}
+                        {creature.genus && (
+                          <p><strong>Genre :</strong> {creature.genus}</p>
+                        )}
+                        {creature.height && creature.weight && (
+                          <p><strong>Taille/Poids :</strong> {creature.height} / {creature.weight}</p>
+                        )}
+                        {creature.special_abilities && (
+                          <p><strong>Capacités :</strong> {creature.special_abilities}</p>
+                        )}
+                        {creature.notes && (
+                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{creature.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
-          )
-          })}
+          ))}
         </div>
       )}
     </div>

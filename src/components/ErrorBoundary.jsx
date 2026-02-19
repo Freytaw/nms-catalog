@@ -1,5 +1,6 @@
 import { Component } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { logger } from '../utils/logger'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -16,8 +17,13 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log error to console
-    console.error('🔥 Error caught by boundary:', error, errorInfo)
+    // Log error with logger (will save to Supabase)
+    logger.error('React Error Boundary caught error', {
+      error: error.toString(),
+      componentStack: errorInfo.componentStack,
+      errorName: error.name,
+      errorMessage: error.message
+    })
     
     this.setState({
       error,
@@ -70,7 +76,7 @@ class ErrorBoundary extends Component {
               lineHeight: '1.6'
             }}>
               L'application a rencontré une erreur inattendue. 
-              Les détails ont été enregistrés dans la console.
+              L'erreur a été enregistrée automatiquement.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (

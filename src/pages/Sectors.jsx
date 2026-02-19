@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Map } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 
 function Sectors() {
   const location = useLocation()
@@ -11,6 +13,15 @@ function Sectors() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSector, setEditingSector] = useState(null)
+  
+  // Filters
+  const [filterName, setFilterName] = useState('')
+  const [filterGalaxy, setFilterGalaxy] = useState('all')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  
   const [formData, setFormData] = useState({
     name: '',
     galaxy: 'Euclide',
@@ -48,6 +59,87 @@ function Sectors() {
       setLoading(false)
     }
   }
+
+  // Get unique galaxies for filter dropdown
+  const uniqueGalaxies = [...new Set(sectors.map(s => s.galaxy).filter(Boolean))]
+
+  // Apply filters
+  function getFilteredSectors() {
+    return sectors.filter(sector => {
+      // Filter by name
+      if (filterName && !sector.name.toLowerCase().includes(filterName.toLowerCase())) {
+        return false
+      }
+      // Filter by galaxy
+      if (filterGalaxy !== 'all' && sector.galaxy !== filterGalaxy) {
+        return false
+      }
+      return true
+    })
+  }
+
+  // Get grouped sectors with pagination
+  function getSectorsByGalaxy() {
+    const filtered = getFilteredSectors()
+    const grouped = {}
+    
+    filtered.forEach(sector => {
+      const galaxyName = sector.galaxy || 'Galaxie Inconnue'
+      if (!grouped[galaxyName]) {
+        grouped[galaxyName] = []
+      }
+      grouped[galaxyName].push(sector)
+    })
+    
+    const sortedGalaxies = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
+    
+    // Flatten for pagination
+    const allSectors = sortedGalaxies.flatMap(galaxyName => 
+      grouped[galaxyName].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedSectors = allSectors.slice(startIndex, endIndex)
+    
+    // Regroup paginated sectors
+    const paginatedGrouped = {}
+    paginatedSectors.forEach(sector => {
+      const galaxyName = sector.galaxy || 'Galaxie Inconnue'
+      if (!paginatedGrouped[galaxyName]) {
+        paginatedGrouped[galaxyName] = []
+      }
+      paginatedGrouped[galaxyName].push(sector)
+    })
+    
+    return {
+      groups: Object.keys(paginatedGrouped).sort((a, b) => a.localeCompare(b)).map(galaxyName => ({
+        galaxyName,
+        sectors: paginatedGrouped[galaxyName]
+      })),
+      totalCount: filtered.length
+    }
+  }
+
+  function resetFilters() {
+    setFilterName('')
+    setFilterGalaxy('all')
+    setCurrentPage(1)
+  }
+
+  function handlePageChange(page) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleItemsPerPageChange(count) {
+    setItemsPerPage(count)
+    setCurrentPage(1)
+  }
+
+  const { groups, totalCount } = getSectorsByGalaxy()
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -230,24 +322,54 @@ function Sectors() {
         </div>
       )}
 
+      {/* Filters */}
+      {!showForm && sectors.length > 0 && (
+        <FilterBar
+          filters={[
+            {
+              type: 'text',
+              name: 'name',
+              label: 'Nom du secteur',
+              value: filterName,
+              onChange: (value) => {
+                setFilterName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'select',
+              name: 'galaxy',
+              label: 'Galaxie',
+              value: filterGalaxy,
+              onChange: (value) => {
+                setFilterGalaxy(value)
+                setCurrentPage(1)
+              },
+              options: uniqueGalaxies
+            }
+          ]}
+          onReset={resetFilters}
+          resultCount={totalCount}
+        />
+      )}
+
       {sectors.length === 0 ? (
         <div className="empty-state">
           <Map size={64} />
           <p>Aucun secteur enregistré</p>
           <p>Commence par créer ton premier secteur !</p>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="empty-state">
+          <Map size={64} />
+          <p>Aucun résultat</p>
+          <p>Modifie tes filtres pour voir des secteurs</p>
+        </div>
       ) : (
         <>
           {/* Group sectors by galaxy */}
-          {Object.entries(
-            sectors.reduce((acc, sector) => {
-              const galaxy = sector.galaxy || 'Euclide'
-              if (!acc[galaxy]) acc[galaxy] = []
-              acc[galaxy].push(sector)
-              return acc
-            }, {})
-          ).map(([galaxy, galaxySectors]) => (
-            <div key={galaxy} style={{ marginBottom: '3rem' }}>
+          {groups.map(({ galaxyName, sectors: galaxySectors }) => (
+            <div key={galaxyName} style={{ marginBottom: '3rem' }}>
               <h2 style={{ 
                 marginBottom: '1.5rem',
                 color: 'var(--nms-primary)',
@@ -255,7 +377,7 @@ function Sectors() {
                 borderBottom: '2px solid var(--nms-border)',
                 paddingBottom: '0.5rem'
               }}>
-                {galaxy} ({galaxySectors.length})
+                {galaxyName} ({galaxySectors.length})
               </h2>
               <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
                 {galaxySectors.map((sector) => {
@@ -316,6 +438,18 @@ function Sectors() {
               </div>
             </div>
           ))}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalCount}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
+          )}
         </>
       )}
     </div>

@@ -17,7 +17,7 @@ export const POI_ICONS = {
   'Plaque ancienne': '/icons/plaque.png',
   'Usine de traitement des déchets': '/icons/usine.png',
   'Balise': '/icons/balise.png',
-  'Monilithe': '/icons/monolith.png',
+  'Monolithe': '/icons/monolith.png',
   'Observatoire': '/icons/observatoire.png',
   
   // Fallback emoji pour les types sans icône custom
@@ -35,7 +35,7 @@ export const POI_TYPES = [
   'Capsule de sauvetage',
   'Comptoir commercial',
   'Débris',
-  'Monilithe',
+  'Monolithe',
   'Observatoire',
   'Plaque ancienne',
   'Tas de déchets',

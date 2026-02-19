@@ -4,6 +4,8 @@ import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Globe } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 import SingleImageUpload from '../components/SingleImageUpload'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 
 function Planets() {
   const location = useLocation()
@@ -13,6 +15,19 @@ function Planets() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingPlanet, setEditingPlanet] = useState(null)
+  
+  // Filters
+  const [filterSectorName, setFilterSectorName] = useState('')
+  const [filterSystemName, setFilterSystemName] = useState('')
+  const [filterPlanetName, setFilterPlanetName] = useState('')
+  const [filterPlanetType, setFilterPlanetType] = useState('all')
+  const [filterClimate, setFilterClimate] = useState('all')
+  const [filterSentinels, setFilterSentinels] = useState('all')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  
   const [formData, setFormData] = useState({
     system_id: '',
     name: '',
@@ -68,11 +83,57 @@ function Planets() {
     }
   }
 
-  // Group planets by system and sort alphabetically
+  // Get unique values for filter dropdowns
+  const uniquePlanetTypes = [...new Set(planets.map(p => p.type).filter(Boolean))]
+  const uniqueClimates = [...new Set(planets.map(p => p.climate).filter(Boolean))]
+  const uniqueSentinels = [...new Set(planets.map(p => p.sentinels).filter(Boolean))]
+
+  // Apply filters
+  function getFilteredPlanets() {
+    return planets.filter(planet => {
+      // Filter by sector name (via relations)
+      if (filterSectorName && 
+          !planet.systems?.sectors?.name?.toLowerCase().includes(filterSectorName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by system name (via relations)
+      if (filterSystemName && 
+          !planet.systems?.name?.toLowerCase().includes(filterSystemName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by planet name
+      if (filterPlanetName && 
+          !planet.name.toLowerCase().includes(filterPlanetName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by planet type
+      if (filterPlanetType !== 'all' && planet.type !== filterPlanetType) {
+        return false
+      }
+      
+      // Filter by climate
+      if (filterClimate !== 'all' && planet.climate !== filterClimate) {
+        return false
+      }
+      
+      // Filter by sentinels
+      if (filterSentinels !== 'all' && planet.sentinels !== filterSentinels) {
+        return false
+      }
+      
+      return true
+    })
+  }
+
+  // Group planets by system and sort alphabetically with pagination
   function getPlanetsBySystem() {
+    const filtered = getFilteredPlanets()
     const grouped = {}
     
-    planets.forEach(planet => {
+    filtered.forEach(planet => {
       const systemName = planet.systems?.name || 'Système Inconnu'
       if (!grouped[systemName]) {
         grouped[systemName] = []
@@ -80,14 +141,59 @@ function Planets() {
       grouped[systemName].push(planet)
     })
     
-    // Sort system names alphabetically
     const sortedSystems = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
     
-    return sortedSystems.map(systemName => ({
-      systemName,
-      planets: grouped[systemName].sort((a, b) => a.name.localeCompare(b.name)) // Sort planets alphabetically
-    }))
+    // Flatten for pagination
+    const allPlanets = sortedSystems.flatMap(systemName => 
+      grouped[systemName].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedPlanets = allPlanets.slice(startIndex, endIndex)
+    
+    // Regroup paginated planets
+    const paginatedGrouped = {}
+    paginatedPlanets.forEach(planet => {
+      const systemName = planet.systems?.name || 'Système Inconnu'
+      if (!paginatedGrouped[systemName]) {
+        paginatedGrouped[systemName] = []
+      }
+      paginatedGrouped[systemName].push(planet)
+    })
+    
+    return {
+      groups: Object.keys(paginatedGrouped).sort((a, b) => a.localeCompare(b)).map(systemName => ({
+        systemName,
+        planets: paginatedGrouped[systemName]
+      })),
+      totalCount: filtered.length
+    }
   }
+
+  function resetFilters() {
+    setFilterSectorName('')
+    setFilterSystemName('')
+    setFilterPlanetName('')
+    setFilterPlanetType('all')
+    setFilterClimate('all')
+    setFilterSentinels('all')
+    setCurrentPage(1)
+  }
+
+  function handlePageChange(page) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleItemsPerPageChange(count) {
+    setItemsPerPage(count)
+    setCurrentPage(1)
+  }
+
+  const { groups, totalCount } = getPlanetsBySystem()
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -379,99 +485,190 @@ function Planets() {
         </div>
       )}
 
+      {/* Filters */}
+      {!showForm && planets.length > 0 && (
+        <FilterBar
+          filters={[
+            {
+              type: 'text',
+              name: 'sectorName',
+              label: 'Nom du secteur',
+              value: filterSectorName,
+              onChange: (value) => {
+                setFilterSectorName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'systemName',
+              label: 'Nom du système',
+              value: filterSystemName,
+              onChange: (value) => {
+                setFilterSystemName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'planetName',
+              label: 'Nom de la planète',
+              value: filterPlanetName,
+              onChange: (value) => {
+                setFilterPlanetName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'select',
+              name: 'planetType',
+              label: 'Type de planète',
+              value: filterPlanetType,
+              onChange: (value) => {
+                setFilterPlanetType(value)
+                setCurrentPage(1)
+              },
+              options: uniquePlanetTypes.sort()
+            },
+            {
+              type: 'select',
+              name: 'climate',
+              label: 'Climat',
+              value: filterClimate,
+              onChange: (value) => {
+                setFilterClimate(value)
+                setCurrentPage(1)
+              },
+              options: uniqueClimates.sort()
+            },
+            {
+              type: 'select',
+              name: 'sentinels',
+              label: 'Sentinelles',
+              value: filterSentinels,
+              onChange: (value) => {
+                setFilterSentinels(value)
+                setCurrentPage(1)
+              },
+              options: uniqueSentinels.sort()
+            }
+          ]}
+          onReset={resetFilters}
+          resultCount={totalCount}
+        />
+      )}
+
       {planets.length === 0 ? (
         <div className="empty-state">
           <Globe size={64} />
           <p>Aucune planète enregistrée</p>
           <p>Commence par créer ta première planète !</p>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="empty-state">
+          <Globe size={64} />
+          <p>Aucun résultat</p>
+          <p>Modifie tes filtres pour voir des planètes</p>
+        </div>
       ) : (
-        <div>
-          {getPlanetsBySystem().map(({ systemName, planets: systemPlanets }) => (
-            <div key={systemName} style={{ marginBottom: '2rem' }}>
-              <h2 style={{ 
-                color: 'var(--nms-primary)', 
-                marginBottom: '1rem',
-                fontSize: '1.5rem',
-                borderBottom: '2px solid var(--nms-primary)',
-                paddingBottom: '0.5rem'
-              }}>
-                {systemName}
-              </h2>
-              <div className="grid grid-3">
-                {systemPlanets.map((planet) => {
-                  const images = planet.images || []
-                  const mainImage = images[0]
-                  
-                  return (
-                    <div key={planet.id} className="card">
-                      {mainImage && (
-                        <img 
-                          src={mainImage} 
-                          alt={planet.name}
-                          style={{ 
-                            width: '100%', 
-                            height: '200px', 
-                            objectFit: 'cover', 
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                          }}
-                        />
-                      )}
-                      <div className="card-header">
-                        <Link to={`/planets/${planet.id}`} className="card-title">
-                          {planet.name}
-                        </Link>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button 
-                            className="btn btn-secondary" 
-                            onClick={() => handleEdit(planet)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="btn btn-danger" 
-                            onClick={() => handleDelete(planet.id)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+        <>
+          <div>
+            {groups.map(({ systemName, planets: systemPlanets }) => (
+              <div key={systemName} style={{ marginBottom: '2rem' }}>
+                <h2 style={{ 
+                  color: 'var(--nms-primary)', 
+                  marginBottom: '1rem',
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid var(--nms-primary)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  {systemName}
+                </h2>
+                <div className="grid grid-3">
+                  {systemPlanets.map((planet) => {
+                    const images = planet.images || []
+                    const mainImage = images[0]
+                    
+                    return (
+                      <div key={planet.id} className="card">
+                        {mainImage && (
+                          <img 
+                            src={mainImage} 
+                            alt={planet.name}
+                            style={{ 
+                              width: '100%', 
+                              height: '200px', 
+                              objectFit: 'cover', 
+                              borderRadius: 'var(--radius-md)',
+                              marginBottom: '1rem'
+                            }}
+                          />
+                        )}
+                        <div className="card-header">
+                          <Link to={`/planets/${planet.id}`} className="card-title">
+                            {planet.name}
+                          </Link>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              className="btn btn-secondary" 
+                              onClick={() => handleEdit(planet)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="btn btn-danger" 
+                              onClick={() => handleDelete(planet.id)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="card-content">
+                          {planet.systems && (
+                            <p><strong>Système :</strong> {planet.systems.name}</p>
+                          )}
+                          {planet.type && (
+                            <p><strong>Type :</strong> {planet.type}</p>
+                          )}
+                          {planet.climate && (
+                            <p><strong>Climat :</strong> {planet.climate}</p>
+                          )}
+                          {planet.sentinels && (
+                            <p><strong>Sentinelles :</strong> {planet.sentinels}</p>
+                          )}
+                          {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
+                            <p><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</p>
+                          )}
+                          {planet.flora_discovered > 0 && (
+                            <p><strong>Flore :</strong> {planet.flora_discovered} espèce(s)</p>
+                          )}
+                          {planet.minerals_discovered > 0 && (
+                            <p><strong>Minéraux :</strong> {planet.minerals_discovered}</p>
+                          )}
+                          {planet.notes && (
+                            <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{planet.notes}</p>
+                          )}
                         </div>
                       </div>
-                      <div className="card-content">
-                        {planet.systems && (
-                          <p><strong>Système :</strong> {planet.systems.name}</p>
-                        )}
-                        {planet.type && (
-                          <p><strong>Type :</strong> {planet.type}</p>
-                        )}
-                        {planet.climate && (
-                          <p><strong>Climat :</strong> {planet.climate}</p>
-                        )}
-                        {planet.sentinels && (
-                          <p><strong>Sentinelles :</strong> {planet.sentinels}</p>
-                        )}
-                        {(planet.fauna_discovered > 0 || planet.fauna_total > 0) && (
-                          <p><strong>Faune :</strong> {planet.fauna_discovered}/{planet.fauna_total || '?'} espèce(s)</p>
-                        )}
-                        {planet.flora_discovered > 0 && (
-                          <p><strong>Flore :</strong> {planet.flora_discovered} espèce(s)</p>
-                        )}
-                        {planet.minerals_discovered > 0 && (
-                          <p><strong>Minéraux :</strong> {planet.minerals_discovered}</p>
-                        )}
-                        {planet.notes && (
-                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{planet.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </>
       )}
     </div>
   )

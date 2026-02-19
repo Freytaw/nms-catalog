@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Building } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 
 function Bases() {
   const location = useLocation()
@@ -13,6 +15,17 @@ function Bases() {
   const [showForm, setShowForm] = useState(false)
   const [editingBase, setEditingBase] = useState(null)
   const [coordinatesError, setCoordinatesError] = useState('')
+  
+  // Filters
+  const [filterSectorName, setFilterSectorName] = useState('')
+  const [filterSystemName, setFilterSystemName] = useState('')
+  const [filterPlanetName, setFilterPlanetName] = useState('')
+  const [filterBaseName, setFilterBaseName] = useState('')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  
   const [formData, setFormData] = useState({
     planet_id: '',
     name: '',
@@ -97,10 +110,42 @@ function Bases() {
   }
 
   // Group bases by planet and sort alphabetically
+  // Apply filters
+  function getFilteredBases() {
+    return bases.filter(base => {
+      // Filter by sector name (via relations)
+      if (filterSectorName && 
+          !base.planets?.systems?.sectors?.name?.toLowerCase().includes(filterSectorName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by system name (via relations)
+      if (filterSystemName && 
+          !base.planets?.systems?.name?.toLowerCase().includes(filterSystemName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by planet name (via relations)
+      if (filterPlanetName && 
+          !base.planets?.name?.toLowerCase().includes(filterPlanetName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by base name
+      if (filterBaseName && 
+          !base.name.toLowerCase().includes(filterBaseName.toLowerCase())) {
+        return false
+      }
+      
+      return true
+    })
+  }
+
   function getBasesByPlanet() {
+    const filtered = getFilteredBases()
     const grouped = {}
     
-    bases.forEach(base => {
+    filtered.forEach(base => {
       const planetName = base.planets?.name || 'Planète Inconnue'
       if (!grouped[planetName]) {
         grouped[planetName] = []
@@ -108,14 +153,57 @@ function Bases() {
       grouped[planetName].push(base)
     })
     
-    // Sort planet names alphabetically
     const sortedPlanets = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
     
-    return sortedPlanets.map(planetName => ({
-      planetName,
-      bases: grouped[planetName].sort((a, b) => a.name.localeCompare(b.name)) // Sort bases alphabetically
-    }))
+    // Flatten for pagination
+    const allBases = sortedPlanets.flatMap(planetName => 
+      grouped[planetName].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedBases = allBases.slice(startIndex, endIndex)
+    
+    // Regroup paginated bases
+    const paginatedGrouped = {}
+    paginatedBases.forEach(base => {
+      const planetName = base.planets?.name || 'Planète Inconnue'
+      if (!paginatedGrouped[planetName]) {
+        paginatedGrouped[planetName] = []
+      }
+      paginatedGrouped[planetName].push(base)
+    })
+    
+    return {
+      groups: Object.keys(paginatedGrouped).sort((a, b) => a.localeCompare(b)).map(planetName => ({
+        planetName,
+        bases: paginatedGrouped[planetName]
+      })),
+      totalCount: filtered.length
+    }
   }
+
+  function resetFilters() {
+    setFilterSectorName('')
+    setFilterSystemName('')
+    setFilterPlanetName('')
+    setFilterBaseName('')
+    setCurrentPage(1)
+  }
+
+  function handlePageChange(page) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleItemsPerPageChange(count) {
+    setItemsPerPage(count)
+    setCurrentPage(1)
+  }
+
+  const { groups, totalCount } = getBasesByPlanet()
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -348,87 +436,155 @@ function Bases() {
         </div>
       )}
 
+      {/* Filters */}
+      {!showForm && bases.length > 0 && (
+        <FilterBar
+          filters={[
+            {
+              type: 'text',
+              name: 'sectorName',
+              label: 'Nom du secteur',
+              value: filterSectorName,
+              onChange: (value) => {
+                setFilterSectorName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'systemName',
+              label: 'Nom du système',
+              value: filterSystemName,
+              onChange: (value) => {
+                setFilterSystemName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'planetName',
+              label: 'Nom de la planète',
+              value: filterPlanetName,
+              onChange: (value) => {
+                setFilterPlanetName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'baseName',
+              label: 'Nom de la base',
+              value: filterBaseName,
+              onChange: (value) => {
+                setFilterBaseName(value)
+                setCurrentPage(1)
+              }
+            }
+          ]}
+          onReset={resetFilters}
+          resultCount={totalCount}
+        />
+      )}
+
       {bases.length === 0 ? (
         <div className="empty-state">
           <Building size={64} />
           <p>Aucune base enregistrée</p>
           <p>Commence par créer ta première base !</p>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="empty-state">
+          <Building size={64} />
+          <p>Aucun résultat</p>
+          <p>Modifie tes filtres pour voir des bases</p>
+        </div>
       ) : (
-        <div>
-          {getBasesByPlanet().map(({ planetName, bases: planetBases }) => (
-            <div key={planetName} style={{ marginBottom: '2rem' }}>
-              <h2 style={{ 
-                color: 'var(--nms-primary)', 
-                marginBottom: '1rem',
-                fontSize: '1.5rem',
-                borderBottom: '2px solid var(--nms-primary)',
-                paddingBottom: '0.5rem'
-              }}>
-                {planetName}
-              </h2>
-              <div className="grid grid-2">
-                {planetBases.map((base) => {
-                  const images = base.images || []
-                  const mainImage = images[0]
-                  
-                  return (
-                    <div key={base.id} className="card">
-                      {mainImage && (
-                        <img 
-                          src={mainImage} 
-                          alt={base.name}
-                          style={{ 
-                            width: '100%', 
-                            height: '200px', 
-                            objectFit: 'cover', 
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                          }}
-                        />
-                      )}
-                      <div className="card-header">
-                        <Link to={`/bases/${base.id}`} className="card-title">
-                          {base.name}
-                        </Link>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button 
-                            className="btn btn-secondary" 
-                            onClick={() => handleEdit(base)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="btn btn-danger" 
-                            onClick={() => handleDelete(base.id)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+        <>
+          <div>
+            {groups.map(({ planetName, bases: planetBases }) => (
+              <div key={planetName} style={{ marginBottom: '2rem' }}>
+                <h2 style={{ 
+                  color: 'var(--nms-primary)', 
+                  marginBottom: '1rem',
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid var(--nms-primary)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  {planetName}
+                </h2>
+                <div className="grid grid-2">
+                  {planetBases.map((base) => {
+                    const images = base.images || []
+                    const mainImage = images[0]
+                    
+                    return (
+                      <div key={base.id} className="card">
+                        {mainImage && (
+                          <img 
+                            src={mainImage} 
+                            alt={base.name}
+                            style={{ 
+                              width: '100%', 
+                              height: '200px', 
+                              objectFit: 'cover', 
+                              borderRadius: 'var(--radius-md)',
+                              marginBottom: '1rem'
+                            }}
+                          />
+                        )}
+                        <div className="card-header">
+                          <Link to={`/bases/${base.id}`} className="card-title">
+                            {base.name}
+                          </Link>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              className="btn btn-secondary" 
+                              onClick={() => handleEdit(base)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="btn btn-danger" 
+                              onClick={() => handleDelete(base.id)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="card-content">
+                          {base.planets && (
+                            <p><strong>Planète :</strong> {base.planets.name}</p>
+                          )}
+                          {base.location_description && (
+                            <p><strong>Localisation :</strong> {base.location_description}</p>
+                          )}
+                          {base.resources_nearby && (
+                            <p><strong>Ressources :</strong> {base.resources_nearby}</p>
+                          )}
+                          {base.notes && (
+                            <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{base.notes}</p>
+                          )}
                         </div>
                       </div>
-                      <div className="card-content">
-                        {base.planets && (
-                          <p><strong>Planète :</strong> {base.planets.name}</p>
-                        )}
-                        {base.location_description && (
-                          <p><strong>Localisation :</strong> {base.location_description}</p>
-                        )}
-                        {base.resources_nearby && (
-                          <p><strong>Ressources :</strong> {base.resources_nearby}</p>
-                        )}
-                        {base.notes && (
-                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{base.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </>
       )}
     </div>
   )

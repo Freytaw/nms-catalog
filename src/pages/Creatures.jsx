@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, Users } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 
 function Creatures() {
   const location = useLocation()
@@ -12,6 +14,17 @@ function Creatures() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingCreature, setEditingCreature] = useState(null)
+  
+  // Filters
+  const [filterSectorName, setFilterSectorName] = useState('')
+  const [filterSystemName, setFilterSystemName] = useState('')
+  const [filterPlanetName, setFilterPlanetName] = useState('')
+  const [filterCreatureName, setFilterCreatureName] = useState('')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  
   const [formData, setFormData] = useState({
     planet_id: '',
     name: '',
@@ -66,10 +79,42 @@ function Creatures() {
     }
   }
 
+  // Apply filters
+  function getFilteredCreatures() {
+    return creatures.filter(creature => {
+      // Filter by sector name (via relations)
+      if (filterSectorName && 
+          !creature.planets?.systems?.sectors?.name?.toLowerCase().includes(filterSectorName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by system name (via relations)
+      if (filterSystemName && 
+          !creature.planets?.systems?.name?.toLowerCase().includes(filterSystemName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by planet name (via relations)
+      if (filterPlanetName && 
+          !creature.planets?.name?.toLowerCase().includes(filterPlanetName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by creature name
+      if (filterCreatureName && 
+          !creature.name.toLowerCase().includes(filterCreatureName.toLowerCase())) {
+        return false
+      }
+      
+      return true
+    })
+  }
+
   function getCreaturesByPlanet() {
+    const filtered = getFilteredCreatures()
     const grouped = {}
     
-    creatures.forEach(creature => {
+    filtered.forEach(creature => {
       const planetName = creature.planets?.name || 'Planète Inconnue'
       if (!grouped[planetName]) {
         grouped[planetName] = []
@@ -77,14 +122,57 @@ function Creatures() {
       grouped[planetName].push(creature)
     })
     
-    // Sort planet names alphabetically
     const sortedPlanets = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
     
-    return sortedPlanets.map(planetName => ({
-      planetName,
-      creatures: grouped[planetName].sort((a, b) => a.name.localeCompare(b.name)) // Sort creatures alphabetically
-    }))
+    // Flatten for pagination
+    const allCreatures = sortedPlanets.flatMap(planetName => 
+      grouped[planetName].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedCreatures = allCreatures.slice(startIndex, endIndex)
+    
+    // Regroup paginated creatures
+    const paginatedGrouped = {}
+    paginatedCreatures.forEach(creature => {
+      const planetName = creature.planets?.name || 'Planète Inconnue'
+      if (!paginatedGrouped[planetName]) {
+        paginatedGrouped[planetName] = []
+      }
+      paginatedGrouped[planetName].push(creature)
+    })
+    
+    return {
+      groups: Object.keys(paginatedGrouped).sort((a, b) => a.localeCompare(b)).map(planetName => ({
+        planetName,
+        creatures: paginatedGrouped[planetName]
+      })),
+      totalCount: filtered.length
+    }
   }
+
+  function resetFilters() {
+    setFilterSectorName('')
+    setFilterSystemName('')
+    setFilterPlanetName('')
+    setFilterCreatureName('')
+    setCurrentPage(1)
+  }
+
+  function handlePageChange(page) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleItemsPerPageChange(count) {
+    setItemsPerPage(count)
+    setCurrentPage(1)
+  }
+
+  const { groups, totalCount } = getCreaturesByPlanet()
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -354,95 +442,163 @@ function Creatures() {
         </div>
       )}
 
+      {/* Filters */}
+      {!showForm && creatures.length > 0 && (
+        <FilterBar
+          filters={[
+            {
+              type: 'text',
+              name: 'sectorName',
+              label: 'Nom du secteur',
+              value: filterSectorName,
+              onChange: (value) => {
+                setFilterSectorName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'systemName',
+              label: 'Nom du système',
+              value: filterSystemName,
+              onChange: (value) => {
+                setFilterSystemName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'planetName',
+              label: 'Nom de la planète',
+              value: filterPlanetName,
+              onChange: (value) => {
+                setFilterPlanetName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'creatureName',
+              label: 'Nom de la créature',
+              value: filterCreatureName,
+              onChange: (value) => {
+                setFilterCreatureName(value)
+                setCurrentPage(1)
+              }
+            }
+          ]}
+          onReset={resetFilters}
+          resultCount={totalCount}
+        />
+      )}
+
       {creatures.length === 0 ? (
         <div className="empty-state">
           <Users size={64} />
           <p>Aucune créature enregistrée</p>
           <p>Commence par créer ta première créature !</p>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="empty-state">
+          <Users size={64} />
+          <p>Aucun résultat</p>
+          <p>Modifie tes filtres pour voir des créatures</p>
+        </div>
       ) : (
-        <div>
-          {getCreaturesByPlanet().map(({ planetName, creatures: planetCreatures }) => (
-            <div key={planetName} style={{ marginBottom: '2rem' }}>
-              <h2 style={{ 
-                color: 'var(--nms-primary)', 
-                marginBottom: '1rem',
-                fontSize: '1.5rem',
-                borderBottom: '2px solid var(--nms-primary)',
-                paddingBottom: '0.5rem'
-              }}>
-                {planetName}
-              </h2>
-              <div className="grid grid-3">
-                {planetCreatures.map((creature) => {
-                  const images = creature.images || []
-                  const mainImage = images[0]
-                  
-                  return (
-                    <div key={creature.id} className="card">
-                      {mainImage && (
-                        <img 
-                          src={mainImage} 
-                          alt={creature.name}
-                          style={{ 
-                            width: '100%', 
-                            height: '200px', 
-                            objectFit: 'cover', 
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                          }}
-                        />
-                      )}
-                      <div className="card-header">
-                        <Link to={`/creatures/${creature.id}`} className="card-title">
-                          {creature.name}
-                        </Link>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button 
-                            className="btn btn-secondary" 
-                            onClick={() => handleEdit(creature)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="btn btn-danger" 
-                            onClick={() => handleDelete(creature.id)}
-                            style={{ padding: '0.5rem' }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+        <>
+          <div>
+            {groups.map(({ planetName, creatures: planetCreatures }) => (
+              <div key={planetName} style={{ marginBottom: '2rem' }}>
+                <h2 style={{ 
+                  color: 'var(--nms-primary)', 
+                  marginBottom: '1rem',
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid var(--nms-primary)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  {planetName}
+                </h2>
+                <div className="grid grid-3">
+                  {planetCreatures.map((creature) => {
+                    const images = creature.images || []
+                    const mainImage = images[0]
+                    
+                    return (
+                      <div key={creature.id} className="card">
+                        {mainImage && (
+                          <img 
+                            src={mainImage} 
+                            alt={creature.name}
+                            style={{ 
+                              width: '100%', 
+                              height: '200px', 
+                              objectFit: 'cover', 
+                              borderRadius: 'var(--radius-md)',
+                              marginBottom: '1rem'
+                            }}
+                          />
+                        )}
+                        <div className="card-header">
+                          <Link to={`/creatures/${creature.id}`} className="card-title">
+                            {creature.name}
+                          </Link>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              className="btn btn-secondary" 
+                              onClick={() => handleEdit(creature)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="btn btn-danger" 
+                              onClick={() => handleDelete(creature.id)}
+                              style={{ padding: '0.5rem' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="card-content">
+                          {creature.original_name && (
+                            <p style={{ fontSize: '0.875rem', color: 'var(--nms-gray)' }}>
+                              ({creature.original_name})
+                            </p>
+                          )}
+                          {creature.planets && (
+                            <p><strong>Planète :</strong> {creature.planets.name}</p>
+                          )}
+                          {creature.genus && (
+                            <p><strong>Genre :</strong> {creature.genus}</p>
+                          )}
+                          {creature.height && creature.weight && (
+                            <p><strong>Taille/Poids :</strong> {creature.height} / {creature.weight}</p>
+                          )}
+                          {creature.special_abilities && (
+                            <p><strong>Capacités :</strong> {creature.special_abilities}</p>
+                          )}
+                          {creature.notes && (
+                            <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{creature.notes}</p>
+                          )}
                         </div>
                       </div>
-                      <div className="card-content">
-                        {creature.original_name && (
-                          <p style={{ fontSize: '0.875rem', color: 'var(--nms-gray)' }}>
-                            ({creature.original_name})
-                          </p>
-                        )}
-                        {creature.planets && (
-                          <p><strong>Planète :</strong> {creature.planets.name}</p>
-                        )}
-                        {creature.genus && (
-                          <p><strong>Genre :</strong> {creature.genus}</p>
-                        )}
-                        {creature.height && creature.weight && (
-                          <p><strong>Taille/Poids :</strong> {creature.height} / {creature.weight}</p>
-                        )}
-                        {creature.special_abilities && (
-                          <p><strong>Capacités :</strong> {creature.special_abilities}</p>
-                        )}
-                        {creature.notes && (
-                          <p style={{ marginTop: '0.5rem', color: 'var(--nms-gray)' }}>{creature.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </>
       )}
     </div>
   )

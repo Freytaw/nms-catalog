@@ -4,6 +4,8 @@ import { supabase } from '../supabaseClient'
 import { Plus, Edit, Trash2, MapPin } from 'lucide-react'
 import ImageUpload from '../components/ImageUpload'
 import { POI_TYPES } from '../config/poiIcons'
+import FilterBar from '../components/FilterBar'
+import Pagination from '../components/Pagination'
 
 function PointsOfInterest() {
   const location = useLocation()
@@ -14,6 +16,18 @@ function PointsOfInterest() {
   const [showForm, setShowForm] = useState(false)
   const [editingPOI, setEditingPOI] = useState(null)
   const [coordinatesError, setCoordinatesError] = useState('')
+  
+  // Filters
+  const [filterSectorName, setFilterSectorName] = useState('')
+  const [filterSystemName, setFilterSystemName] = useState('')
+  const [filterPlanetName, setFilterPlanetName] = useState('')
+  const [filterPOIName, setFilterPOIName] = useState('')
+  const [filterPOIType, setFilterPOIType] = useState('all')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(50)
+  
   const [formData, setFormData] = useState({
     planet_id: '',
     name: '',
@@ -100,10 +114,50 @@ function PointsOfInterest() {
   }
 
   // Group POI by planet and sort alphabetically
+  // Get unique POI types for filter dropdown
+  const uniquePOITypes = [...new Set(pointsOfInterest.map(poi => poi.type).filter(Boolean))]
+
+  // Apply filters
+  function getFilteredPOI() {
+    return pointsOfInterest.filter(poi => {
+      // Filter by sector name (via relations)
+      if (filterSectorName && 
+          !poi.planets?.systems?.sectors?.name?.toLowerCase().includes(filterSectorName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by system name (via relations)
+      if (filterSystemName && 
+          !poi.planets?.systems?.name?.toLowerCase().includes(filterSystemName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by planet name (via relations)
+      if (filterPlanetName && 
+          !poi.planets?.name?.toLowerCase().includes(filterPlanetName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by POI name
+      if (filterPOIName && 
+          !poi.name.toLowerCase().includes(filterPOIName.toLowerCase())) {
+        return false
+      }
+      
+      // Filter by POI type
+      if (filterPOIType !== 'all' && poi.type !== filterPOIType) {
+        return false
+      }
+      
+      return true
+    })
+  }
+
   function getPOIByPlanet() {
+    const filtered = getFilteredPOI()
     const grouped = {}
     
-    pointsOfInterest.forEach(poi => {
+    filtered.forEach(poi => {
       const planetName = poi.planets?.name || 'Planète Inconnue'
       if (!grouped[planetName]) {
         grouped[planetName] = []
@@ -111,14 +165,58 @@ function PointsOfInterest() {
       grouped[planetName].push(poi)
     })
     
-    // Sort planet names alphabetically
     const sortedPlanets = Object.keys(grouped).sort((a, b) => a.localeCompare(b))
     
-    return sortedPlanets.map(planetName => ({
-      planetName,
-      pois: grouped[planetName].sort((a, b) => a.name.localeCompare(b.name)) // Sort POIs alphabetically
-    }))
+    // Flatten for pagination
+    const allPOIs = sortedPlanets.flatMap(planetName => 
+      grouped[planetName].sort((a, b) => a.name.localeCompare(b.name))
+    )
+    
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedPOIs = allPOIs.slice(startIndex, endIndex)
+    
+    // Regroup paginated POIs
+    const paginatedGrouped = {}
+    paginatedPOIs.forEach(poi => {
+      const planetName = poi.planets?.name || 'Planète Inconnue'
+      if (!paginatedGrouped[planetName]) {
+        paginatedGrouped[planetName] = []
+      }
+      paginatedGrouped[planetName].push(poi)
+    })
+    
+    return {
+      groups: Object.keys(paginatedGrouped).sort((a, b) => a.localeCompare(b)).map(planetName => ({
+        planetName,
+        pois: paginatedGrouped[planetName]
+      })),
+      totalCount: filtered.length
+    }
   }
+
+  function resetFilters() {
+    setFilterSectorName('')
+    setFilterSystemName('')
+    setFilterPlanetName('')
+    setFilterPOIName('')
+    setFilterPOIType('all')
+    setCurrentPage(1)
+  }
+
+  function handlePageChange(page) {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleItemsPerPageChange(count) {
+    setItemsPerPage(count)
+    setCurrentPage(1)
+  }
+
+  const { groups, totalCount } = getPOIByPlanet()
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -348,83 +446,162 @@ function PointsOfInterest() {
         </div>
       )}
 
+      {/* Filters */}
+      {!showForm && pointsOfInterest.length > 0 && (
+        <FilterBar
+          filters={[
+            {
+              type: 'text',
+              name: 'sectorName',
+              label: 'Nom du secteur',
+              value: filterSectorName,
+              onChange: (value) => {
+                setFilterSectorName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'systemName',
+              label: 'Nom du système',
+              value: filterSystemName,
+              onChange: (value) => {
+                setFilterSystemName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'planetName',
+              label: 'Nom de la planète',
+              value: filterPlanetName,
+              onChange: (value) => {
+                setFilterPlanetName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'text',
+              name: 'poiName',
+              label: 'Nom du POI',
+              value: filterPOIName,
+              onChange: (value) => {
+                setFilterPOIName(value)
+                setCurrentPage(1)
+              }
+            },
+            {
+              type: 'select',
+              name: 'poiType',
+              label: 'Type de POI',
+              value: filterPOIType,
+              onChange: (value) => {
+                setFilterPOIType(value)
+                setCurrentPage(1)
+              },
+              options: uniquePOITypes.sort()
+            }
+          ]}
+          onReset={resetFilters}
+          resultCount={totalCount}
+        />
+      )}
+
       {pointsOfInterest.length === 0 ? (
         <div className="empty-state">
           <MapPin size={64} />
           <p>Aucun point d'intérêt enregistré</p>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="empty-state">
+          <MapPin size={64} />
+          <p>Aucun résultat</p>
+          <p>Modifie tes filtres pour voir des points d'intérêt</p>
+        </div>
       ) : (
-        <div>
-          {getPOIByPlanet().map(({ planetName, pois: planetPOIs }) => (
-            <div key={planetName} style={{ marginBottom: '2rem' }}>
-              <h2 style={{ 
-                color: 'var(--nms-primary)', 
-                marginBottom: '1rem',
-                fontSize: '1.5rem',
-                borderBottom: '2px solid var(--nms-primary)',
-                paddingBottom: '0.5rem'
-              }}>
-                {planetName}
-              </h2>
-              <div className="grid grid-3">
-                {planetPOIs.map((poi) => {
-                  const images = poi.images || []
-                  const mainImage = images[0]
-                  
-                  return (
-                    <div key={poi.id} className="card">
-                      {mainImage && (
-                        <img 
-                          src={mainImage} 
-                          alt={poi.name}
-                          style={{ 
-                            width: '100%', 
-                            height: '200px', 
-                            objectFit: 'cover', 
-                            borderRadius: 'var(--radius-md)',
-                            marginBottom: '1rem'
-                          }}
-                        />
-                      )}
-                      <div className="card-header">
-                        <Link to={`/points-of-interest/${poi.id}`} className="card-title">
-                          {poi.name}
-                        </Link>
-                        <div className="card-actions">
-                          <button 
-                            className="btn-icon"
-                            onClick={() => handleEdit(poi)}
-                            title="Modifier"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button 
-                            className="btn-icon"
-                            onClick={() => handleDelete(poi.id)}
-                            title="Supprimer"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+        <>
+          <div>
+            {groups.map(({ planetName, pois: planetPOIs }) => (
+              <div key={planetName} style={{ marginBottom: '2rem' }}>
+                <h2 style={{ 
+                  color: 'var(--nms-primary)', 
+                  marginBottom: '1rem',
+                  fontSize: '1.5rem',
+                  borderBottom: '2px solid var(--nms-primary)',
+                  paddingBottom: '0.5rem'
+                }}>
+                  {planetName}
+                </h2>
+                <div className="grid grid-3">
+                  {planetPOIs.map((poi) => {
+                    const images = poi.images || []
+                    const mainImage = images[0]
+                    
+                    return (
+                      <div key={poi.id} className="card">
+                        {mainImage && (
+                          <img 
+                            src={mainImage} 
+                            alt={poi.name}
+                            style={{ 
+                              width: '100%', 
+                              height: '200px', 
+                              objectFit: 'cover', 
+                              borderRadius: 'var(--radius-md)',
+                              marginBottom: '1rem'
+                            }}
+                          />
+                        )}
+                        <div className="card-header">
+                          <Link to={`/points-of-interest/${poi.id}`} className="card-title">
+                            {poi.name}
+                          </Link>
+                          <div className="card-actions">
+                            <button 
+                              className="btn-icon"
+                              onClick={() => handleEdit(poi)}
+                              title="Modifier"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button 
+                              className="btn-icon"
+                              onClick={() => handleDelete(poi.id)}
+                              title="Supprimer"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="card-content">
+                          {poi.type && <p><strong>Type:</strong> {poi.type}</p>}
+                          {poi.planets && (
+                            <p>
+                              <strong>Planète:</strong> {poi.planets.name}
+                              {poi.planets.systems && poi.planets.systems.name && (
+                                <> • {poi.planets.systems.name}</>
+                              )}
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="card-content">
-                        {poi.type && <p><strong>Type:</strong> {poi.type}</p>}
-                        {poi.planets && (
-                          <p>
-                            <strong>Planète:</strong> {poi.planets.name}
-                            {poi.planets.systems && poi.planets.systems.name && (
-                              <> • {poi.planets.systems.name}</>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </>
       )}
     </div>
   )

@@ -18,6 +18,7 @@ export const POI_ICONS = {
   'Usine de traitement des déchets': '/icons/usine.png',
   'Balise': '/icons/balise.png',
   'Monilithe': '/icons/monolith.png',
+  'Observatoire': '/icons/observatoire.png',
   
   // Fallback emoji pour les types sans icône custom
   'default': '📍'
@@ -35,6 +36,7 @@ export const POI_TYPES = [
   'Comptoir commercial',
   'Débris',
   'Monilithe',
+  'Observatoire',
   'Plaque ancienne',
   'Tas de déchets',
   'Tour de communication holographique',

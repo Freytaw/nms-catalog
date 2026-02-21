@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { ZoomIn, ZoomOut, Maximize2, RotateCcw } from 'lucide-react'
 import { getPOIIcon, isImageIcon, BASE_ICON } from '../config/poiIcons'
+import { getPlanetTexture, generateTexturePattern } from '../config/planetTextures'
 
 // Planet colors based on type
 const planetColors = {
@@ -33,6 +34,24 @@ function PlanetMapCanvas({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [canvasSize, setCanvasSize] = useState({ width, height })
   const [loadedImages, setLoadedImages] = useState({})
+  const [textureCanvas, setTextureCanvas] = useState(null)
+
+  // Generate planet texture once
+  useEffect(() => {
+    if (!planet) return
+    
+    // Create off-screen canvas for texture
+    const offscreenCanvas = document.createElement('canvas')
+    offscreenCanvas.width = width
+    offscreenCanvas.height = height
+    const ctx = offscreenCanvas.getContext('2d')
+    
+    // Generate texture
+    const texture = getPlanetTexture(planet.type, planet.planet_texture)
+    generateTexturePattern(ctx, texture, width, height)
+    
+    setTextureCanvas(offscreenCanvas)
+  }, [planet?.type, planet?.planet_texture, width, height])
 
   // Preload POI and base images
   useEffect(() => {
@@ -83,7 +102,7 @@ function PlanetMapCanvas({
 
   useEffect(() => {
     redraw()
-  }, [planet, bases, pointsOfInterest, scale, offset, canvasSize, loadedImages])
+  }, [planet, bases, pointsOfInterest, scale, offset, canvasSize, loadedImages, textureCanvas])
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -160,17 +179,14 @@ function PlanetMapCanvas({
 
   // Draw planet background
   function drawPlanetBackground(ctx, planet, width, height) {
-    const colors = getPlanetColors(planet.type)
-    
-    const gradient = ctx.createRadialGradient(
-      width / 2, height / 2, 0,
-      width / 2, height / 2, width / 1.5
-    )
-    gradient.addColorStop(0, colors.primary)
-    gradient.addColorStop(1, colors.secondary)
-    
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, width, height)
+    // Use pre-generated texture canvas
+    if (textureCanvas) {
+      ctx.drawImage(textureCanvas, 0, 0, width, height)
+    } else {
+      // Fallback: solid color if texture not ready
+      ctx.fillStyle = '#00d9ff'
+      ctx.fillRect(0, 0, width, height)
+    }
   }
 
   // Draw grid lines

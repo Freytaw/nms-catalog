@@ -6,6 +6,7 @@ import ImageUpload from '../components/ImageUpload'
 import SingleImageUpload from '../components/SingleImageUpload'
 import FilterBar from '../components/FilterBar'
 import Pagination from '../components/Pagination'
+import { TEXTURE_PATTERNS } from '../config/planetTextures'
 
 function Planets() {
   const location = useLocation()
@@ -39,6 +40,7 @@ function Planets() {
     flora_discovered: 0,
     minerals_discovered: 0,
     portal_coordinates: '',
+    planet_texture: null,
     notes: '',
     images: []
   })
@@ -278,6 +280,7 @@ function Planets() {
       flora_discovered: planet.flora_discovered || 0,
       minerals_discovered: planet.minerals_discovered || 0,
       portal_coordinates: planet.portal_coordinates || '',
+      planet_texture: planet.planet_texture || null,
       notes: planet.notes || '',
       images: planet.images || []
     })
@@ -298,6 +301,7 @@ function Planets() {
       flora_discovered: 0,
       minerals_discovered: 0,
       portal_coordinates: '',
+      planet_texture: null,
       notes: '',
       images: []
     })
@@ -364,6 +368,25 @@ function Planets() {
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Texture de la carte (optionnel)</label>
+              <select
+                className="form-input"
+                value={formData.planet_texture || ''}
+                onChange={(e) => setFormData({ ...formData, planet_texture: e.target.value || null })}
+              >
+                <option value="">Automatique (selon type)</option>
+                {TEXTURE_PATTERNS.map(pattern => (
+                  <option key={pattern.value} value={pattern.value}>
+                    {pattern.label}
+                  </option>
+                ))}
+              </select>
+              <small style={{ color: 'var(--nms-gray)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                Par défaut, la texture est choisie automatiquement selon le type de planète
+              </small>
             </div>
 
             <div className="form-group">

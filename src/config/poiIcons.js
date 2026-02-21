@@ -19,6 +19,7 @@ export const POI_ICONS = {
   'Balise': '/icons/balise.png',
   'Monolithe': '/icons/monolith.png',
   'Observatoire': '/icons/observatoire.png',
+  'Ruine ancienne': '/icons/ruine.png',
   
   // Fallback emoji pour les types sans icône custom
   'default': '📍'
@@ -38,6 +39,7 @@ export const POI_TYPES = [
   'Monolithe',
   'Observatoire',
   'Plaque ancienne',
+  'Ruine ancienne',
   'Tas de déchets',
   'Tour de communication holographique',
   'Tour de retransmission',

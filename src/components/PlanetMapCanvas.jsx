@@ -35,6 +35,7 @@ function PlanetMapCanvas({
   const [canvasSize, setCanvasSize] = useState({ width, height })
   const [loadedImages, setLoadedImages] = useState({})
   const [textureCanvas, setTextureCanvas] = useState(null)
+  const [mousePosition, setMousePosition] = useState(null)
 
   // Generate planet texture once
   useEffect(() => {
@@ -172,6 +173,13 @@ function PlanetMapCanvas({
     return { x, y }
   }
 
+  // Convert XY coordinates to latitude/longitude
+  function xyToLatLon(x, y, width, height) {
+    const lon = (x / width) * 360 - 180
+    const lat = 90 - (y / height) * 180
+    return { lat, lon }
+  }
+
   // Get planet colors
   function getPlanetColors(planetType) {
     return planetColors[planetType] || planetColors.Default
@@ -189,40 +197,108 @@ function PlanetMapCanvas({
     }
   }
 
-  // Draw grid lines
-  function drawGrid(ctx, width, height) {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'
-    ctx.lineWidth = 1
+  // Draw grid lines with coordinates on edges
+  function drawGrid(ctx, width, height, currentScale, currentOffset) {
+    ctx.save()
     
-    // Vertical lines (longitude) every 30°
-    for (let lon = -180; lon <= 180; lon += 30) {
+    // Calculate visible bounds in lat/lon
+    const topLeft = xyToLatLon(-currentOffset.x / currentScale, -currentOffset.y / currentScale, width, height)
+    const bottomRight = xyToLatLon((width - currentOffset.x) / currentScale, (height - currentOffset.y) / currentScale, width, height)
+    
+    // Determine grid spacing based on zoom level
+    let gridSpacing = 30
+    if (currentScale > 5) gridSpacing = 10
+    if (currentScale > 15) gridSpacing = 5
+    if (currentScale > 30) gridSpacing = 1
+    
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'
+    ctx.lineWidth = 1 / currentScale
+    
+    // Draw vertical lines (longitude)
+    const minLon = Math.floor(topLeft.lon / gridSpacing) * gridSpacing
+    const maxLon = Math.ceil(bottomRight.lon / gridSpacing) * gridSpacing
+    
+    for (let lon = minLon; lon <= maxLon; lon += gridSpacing) {
+      if (lon < -180 || lon > 180) continue
+      
       const { x } = latLonToXY(0, lon, width, height)
       ctx.beginPath()
       ctx.moveTo(x, 0)
       ctx.lineTo(x, height)
       ctx.stroke()
-      
-      // Label longitude
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-      ctx.font = '12px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText(`${lon}°`, x, height - 5)
     }
     
-    // Horizontal lines (latitude) every 30°
-    for (let lat = -90; lat <= 90; lat += 30) {
+    // Draw horizontal lines (latitude)
+    const minLat = Math.floor(bottomRight.lat / gridSpacing) * gridSpacing
+    const maxLat = Math.ceil(topLeft.lat / gridSpacing) * gridSpacing
+    
+    for (let lat = minLat; lat <= maxLat; lat += gridSpacing) {
+      if (lat < -90 || lat > 90) continue
+      
       const { y } = latLonToXY(lat, 0, width, height)
       ctx.beginPath()
       ctx.moveTo(0, y)
       ctx.lineTo(width, y)
       ctx.stroke()
-      
-      // Label latitude
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-      ctx.font = '12px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText(`${lat}°`, 5, y - 5)
     }
+    
+    ctx.restore()
+    
+    // Draw coordinate labels on canvas edges (in screen space)
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0) // Reset transform for labels
+    
+    const fontSize = 11
+    ctx.font = `${fontSize}px Arial`
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'
+    ctx.lineWidth = 3
+    
+    // Longitude labels (top and bottom edges)
+    for (let lon = minLon; lon <= maxLon; lon += gridSpacing) {
+      if (lon < -180 || lon > 180) continue
+      
+      const { x: gridX } = latLonToXY(0, lon, width, height)
+      const screenX = gridX * currentScale + currentOffset.x
+      
+      if (screenX >= 0 && screenX <= canvasSize.width) {
+        const label = `${lon}°`
+        const metrics = ctx.measureText(label)
+        
+        // Top edge
+        ctx.strokeText(label, screenX - metrics.width / 2, 15)
+        ctx.fillText(label, screenX - metrics.width / 2, 15)
+        
+        // Bottom edge
+        ctx.strokeText(label, screenX - metrics.width / 2, canvasSize.height - 5)
+        ctx.fillText(label, screenX - metrics.width / 2, canvasSize.height - 5)
+      }
+    }
+    
+    // Latitude labels (left and right edges)
+    for (let lat = minLat; lat <= maxLat; lat += gridSpacing) {
+      if (lat < -90 || lat > 90) continue
+      
+      const { y: gridY } = latLonToXY(lat, 0, width, height)
+      const screenY = gridY * currentScale + currentOffset.y
+      
+      if (screenY >= 15 && screenY <= canvasSize.height - 5) {
+        const label = `${lat}°`
+        const metrics = ctx.measureText(label)
+        
+        // Left edge
+        ctx.strokeText(label, 5, screenY + fontSize / 3)
+        ctx.fillText(label, 5, screenY + fontSize / 3)
+        
+        // Right edge
+        ctx.textAlign = 'right'
+        ctx.strokeText(label, canvasSize.width - 5, screenY + fontSize / 3)
+        ctx.fillText(label, canvasSize.width - 5, screenY + fontSize / 3)
+        ctx.textAlign = 'left'
+      }
+    }
+    
+    ctx.restore()
   }
 
   // Draw a marker on the map (with constant size regardless of zoom)
@@ -299,8 +375,8 @@ function PlanetMapCanvas({
     // Draw background
     drawPlanetBackground(ctx, mapData.planet, width, height)
     
-    // Draw grid
-    drawGrid(ctx, width, height)
+    // Draw grid (before transform reset for edge labels)
+    drawGrid(ctx, width, height, scale, offset)
     
     // Draw bases
     mapData.bases.forEach(base => {
@@ -425,12 +501,34 @@ function PlanetMapCanvas({
   }
 
   function handleMouseMove(e) {
-    if (!isDragging) return
+    const canvas = canvasRef.current
+    if (!canvas) return
     
-    setOffset({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    })
+    const rect = canvas.getBoundingClientRect()
+    const canvasX = e.clientX - rect.left
+    const canvasY = e.clientY - rect.top
+    
+    // Convert canvas coordinates to world coordinates (accounting for zoom/pan)
+    const worldX = (canvasX - offset.x) / scale
+    const worldY = (canvasY - offset.y) / scale
+    
+    // Convert to lat/lon
+    const { lat, lon } = xyToLatLon(worldX, worldY, width, height)
+    
+    // Update mouse position for display
+    setMousePosition({ lat, lon, canvasX, canvasY })
+    
+    // Handle dragging
+    if (isDragging) {
+      setOffset({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      })
+    }
+  }
+
+  function handleMouseLeave() {
+    setMousePosition(null)
   }
 
   function handleMouseUp() {
@@ -518,7 +616,10 @@ function PlanetMapCanvas({
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
+          onMouseLeave={(e) => {
+            handleMouseUp()
+            handleMouseLeave()
+          }}
           style={{
             display: 'block',
             imageRendering: 'crisp-edges',
@@ -527,6 +628,27 @@ function PlanetMapCanvas({
             objectFit: 'contain'
           }}
         />
+        
+        {/* Mouse coordinates overlay */}
+        {mousePosition && (
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            color: 'var(--nms-primary)',
+            padding: '8px 12px',
+            borderRadius: 'var(--radius-md)',
+            fontFamily: 'monospace',
+            fontSize: '13px',
+            pointerEvents: 'none',
+            border: '1px solid var(--nms-primary)',
+            lineHeight: '1.4'
+          }}>
+            <div>Lat: {mousePosition.lat.toFixed(2)}°</div>
+            <div>Lon: {mousePosition.lon.toFixed(2)}°</div>
+          </div>
+        )}
       </div>
     </div>
   )

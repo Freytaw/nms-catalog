@@ -21,6 +21,7 @@ export const PLANET_TEXTURES = {
   'Sporifère': 'spore',
   'Abandonnée': 'abandoned',
   'Pourpre': 'purple',
+  'Isotopique': 'isotopic',
   'Default': 'barren'
 }
 
@@ -40,7 +41,8 @@ export const TEXTURE_PATTERNS = [
   { value: 'jade', label: 'Jade condamnée (rose violet)', color: '#cc66cc' },
   { value: 'spore', label: 'Sporifère (vert spore)', color: '#66dd44' },
   { value: 'abandoned', label: 'Abandonnée (noir orange)', color: '#442200' },
-  { value: 'purple', label: 'Pourpre (gris rouge)', color: '#884444' }
+  { value: 'purple', label: 'Pourpre (gris rouge)', color: '#884444' },
+  { value: 'isotopic', label: 'Isotopique (bleu électrique)', color: '#00aaff' }
 ]
 
 // Get texture for a planet type
@@ -109,6 +111,9 @@ export function generateTexturePattern(ctx, texture, width, height) {
       break
     case 'purple':
       addPurplePattern(ctx, width, height)
+      break
+    case 'isotopic':
+      addIsotopicPattern(ctx, width, height)
       break
     case 'barren':
     default:
@@ -451,3 +456,57 @@ function addPurplePattern(ctx, width, height) {
   }
   ctx.globalAlpha = 1
 }
+
+// Isotopic pattern: electric blue energy
+function addIsotopicPattern(ctx, width, height) {
+  // Electric blue glowing spots
+  ctx.globalAlpha = 0.4
+  const colors = ["#00ccff", "#0088ff", "#00aaff"]
+  for (let i = 0; i < 30; i++) {
+    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)]
+    const x = Math.random() * width
+    const y = Math.random() * height
+    const r = Math.random() * 35 + 15
+    // Glowing circle
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r)
+    gradient.addColorStop(0, colors[Math.floor(Math.random() * colors.length)])
+    gradient.addColorStop(1, "rgba(0, 170, 255, 0)")
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  // Electric arcs
+  ctx.strokeStyle = "#66ddff"
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.5
+  for (let i = 0; i < 20; i++) {
+    const x = Math.random() * width
+    const y = Math.random() * height
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    // Zigzag electric arc
+    for (let j = 0; j < 5; j++) {
+      const offsetX = Math.random() * 60 - 30
+      const offsetY = Math.random() * 60 - 30
+      ctx.lineTo(x + offsetX, y + offsetY)
+    }
+    ctx.stroke()
+  }
+  
+  // Energy particles
+  ctx.fillStyle = "#ffffff"
+  ctx.globalAlpha = 0.6
+  for (let i = 0; i < 50; i++) {
+    const x = Math.random() * width
+    const y = Math.random() * height
+    const r = Math.random() * 3 + 1
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  ctx.globalAlpha = 1
+}
+

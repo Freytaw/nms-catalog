@@ -364,10 +364,19 @@ function Planets() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Ex: Gelée, Sporifère, Pourpre"
+                placeholder="Sélectionner ou saisir un type"
+                list="planet-types-list"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               />
+              <datalist id="planet-types-list">
+                {uniquePlanetTypes.sort().map(type => (
+                  <option key={type} value={type} />
+                ))}
+              </datalist>
+              <small style={{ color: 'var(--nms-gray)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                Choisir un type existant ou en créer un nouveau
+              </small>
             </div>
 
             <div className="form-group">

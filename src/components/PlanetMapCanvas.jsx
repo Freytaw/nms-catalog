@@ -422,7 +422,7 @@ function PlanetMapCanvas({
     const centerX = rect.width / 2
     const centerY = rect.height / 2
     
-    const newScale = Math.min(scale * 1.5, 50) // Max 5000%
+    const newScale = Math.min(scale * 1.5, 80) // Max 8000%
     const scaleChange = newScale / scale
     
     const newOffsetX = centerX - (centerX - offset.x) * scaleChange
@@ -483,7 +483,7 @@ function PlanetMapCanvas({
     
     // Zoom factor
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9
-    const newScale = Math.max(0.5, Math.min(scale * zoomFactor, 50)) // Max 5000%
+    const newScale = Math.max(0.5, Math.min(scale * zoomFactor, 80)) // Max 8000%
     
     // Adjust offset to zoom toward mouse position
     const scaleChange = newScale / scale

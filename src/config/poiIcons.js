@@ -20,6 +20,8 @@ export const POI_ICONS = {
   'Monolithe': '/icons/monolith.png',
   'Observatoire': '/icons/observatoire.png',
   'Ruine ancienne': '/icons/ruine.png',
+  'Complexe de production': '/icons/production.png',
+  'Terminal de commerce': '/icons/commerce.png',
   
   // Fallback emoji pour les types sans icône custom
   'default': '📍'
@@ -34,6 +36,7 @@ export const POI_TYPES = [
   'Bâtiment abandonné',
   'Campement mineur',
   'Capsule de sauvetage',
+  'Complexe de production',
   'Comptoir commercial',
   'Débris',
   'Monolithe',
@@ -41,6 +44,7 @@ export const POI_TYPES = [
   'Plaque ancienne',
   'Ruine ancienne',
   'Tas de déchets',
+  'Terminal de commerce',
   'Tour de communication holographique',
   'Tour de retransmission',
   'Usine de traitement des déchets',
